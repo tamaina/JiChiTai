@@ -96,7 +96,7 @@ import { ExternalLink } from '@lucide/vue'
       <dl class="about-credits">
         <div>
           <dt>作者</dt>
-          <dd>aqz / tamaina</dd>
+          <dd>aqz/tamaina</dd>
         </div>
         <div>
           <dt>ソースコード</dt>
