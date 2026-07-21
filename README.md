@@ -2,6 +2,8 @@
 
 市区町村の名前や形を手がかりに、都道府県・自治体名をローマ字で答えるゲームです。Cloudflare Workers 上で Vue SPA と Hono API を動かし、e-Stat収録の全国1,747自治体（北方領土6村を含む）の実境界データで時間制限・練習モードを遊べます。
 
+出題方法は「都道府県当て」「市区町村当て」「タイピング」、ルールは「2分アタック」「練習」に対応しています。都道府県・市のみのフィルタ、回答履歴、所在地プレビュー、結果共有、入力文字数とKPM/WPMの集計を備えています。
+
 ## 必要な環境
 
 - Node.js 24 LTS（22 以上でも動作対象）
@@ -32,10 +34,15 @@ pnpm geo:build   # 全国の境界形状と自治体データを再生成
 - `src/app`: Vueアプリ、ルーター、画面、APIクライアント
 - `src/shared`: クライアント・Worker間で共有する型とスキーマ
 - `worker`: Hono API
+- `data`: e-Statから取得した自治体マスター
+- `scripts`: 自治体データとSVGの生成処理
+- `public/generated`: 自治体別・都道府県別SVG
 - `tests`, `worker/*.spec.ts`: Vue・Worker単体テスト
 - `e2e`: ブラウザE2E
 - `docs`: 設計・開発ドキュメント
 
 `/` から直接モード選択を表示します。`/api/*` だけを Worker が先に処理し、存在しない API は JSON 404 を返します。その他のパスは Workers Static Assets が配信し、見つからないパスは Vue SPA の `index.html` へフォールバックします。
+
+`INSTRUCTIONS.md` は初期要件の原本です。現在の構成・操作方法についてはREADMEと`docs/`を参照してください。
 
 詳細は [アーキテクチャ](docs/architecture.md)、[開発手順](docs/development.md)、[境界データの出典と生成](docs/data-sources.md) を参照してください。

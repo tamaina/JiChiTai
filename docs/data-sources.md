@@ -1,9 +1,18 @@
-# 境界データの出典と生成
+# データの出典と生成
 
-# 全国データセット
+## 全国データセット
 
-`pnpm geo:build` は、e-Statの標準地域コード一覧 `data/e-stat-standard-regions.csv` から自治体コード・正式名称・読みを取得し、国土数値情報を加工した `geolonia/japanese-admins` の境界をゲーム用SVGへ変換します。生成物は `public/generated/geometry/{code}.svg` と自治体辞書です。
+`pnpm geo:build` は、[e-Stat「市区町村名・コード」](https://www.e-stat.go.jp/municipalities/cities)から保存した`data/e-stat-standard-regions.csv`を自治体コード・正式名称・読みに使用します。境界は国土数値情報の行政区域を加工した[geolonia/japanese-admins](https://github.com/geolonia/japanese-admins)から取得し、ゲーム用SVGへ変換します。
 
-湖沼は国土数値情報「湖沼データ（W09、2005年）」を使用し、概算面積10km²以上の湖沼・貯水池を約50m精度へ簡略化してから行政界のポリゴンより差し引きます。これにより琵琶湖や霞ヶ浦などの水面を自治体および都道府県SVG上で切り抜いています。
+[国土数値情報「湖沼データ」（W09、2005年）](https://nlftp.mlit.go.jp/ksj/gml/datalist/KsjTmplt-W09-2005.html)から概算面積10km²以上の湖沼・貯水池を選び、湖岸を約50m精度へ簡略化してから行政界ポリゴンより差し引きます。琵琶湖、霞ヶ浦など29湖沼の水面が自治体・都道府県SVGの穴になります。
 
-政令指定都市の行政区は出題せず、区のポリゴンを統合した親市の輪郭を生成します。東京都の特別区は出題対象です。投影には自治体中心緯度を標準緯線とする局所正距円筒図法を使い、SVG化前に簡略化します。
+政令指定都市の行政区は出題せず、区のポリゴンを統合した親市の輪郭を生成します。2024年再編前の旧浜松市7区も現在の浜松市へ統合します。東京都の特別区と北方領土6村は出題対象で、合計は1,747自治体です。投影には自治体中心緯度を標準緯線とする局所正距円筒図法を使い、SVG化前に簡略化します。東京都、鹿児島県、沖縄県の都道府県図は主要領域と全体図を併記します。
+
+## 生成物
+
+- `src/shared/data/generated-municipalities.ts`: 自治体・都道府県メタデータと配置座標
+- `public/generated/geometry/{code}.svg`: 自治体別SVG
+- `public/generated/prefectures/{code}.svg`: 都道府県別SVG
+- `generated/national-dataset-metadata.json`: 入力データのURL・ハッシュ、生成日時、対象湖沼（Git管理対象外）
+
+生成処理は行政界と湖沼データをネットワークから取得し、最大4GBのNode.jsヒープを使用します。生成後は`src/shared/data/generated-municipalities.ts`をPrettierで整形してください。
