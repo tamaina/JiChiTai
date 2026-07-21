@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import {
   Building2,
   Clock3,
@@ -61,6 +61,8 @@ const pinnedHistoryLocationId = ref<string | null>(null)
 const historyLocationPosition = ref({ top: 0, left: 0 })
 const historyLocationAbove = ref(false)
 const countdownValue = ref(3)
+const composing = ref(false)
+const virtualKeyboardOpen = ref(false)
 let gameStartedAt = 0
 let questionStartedAt = 0
 let animationFrame = 0
@@ -68,6 +70,7 @@ let advanceTimer = 0
 let countdownTimer = 0
 const countdownBeatMs = 600
 const initialQuestionTransitionMs = 600
+let maximumVisualViewportHeight = 0
 
 watch(prefectureCode, (code) => {
   if (code && gameType.value === 'prefecture-from-municipality')
@@ -294,9 +297,9 @@ function scheduleNextQuestion(delayMs = 500) {
   advanceTimer = window.setTimeout(() => void nextQuestion(), delayMs)
 }
 
-function submitAnswer(event: KeyboardEvent) {
+function submitAnswer() {
   if (
-    event.isComposing ||
+    composing.value ||
     phase.value !== 'playing' ||
     transitioning.value ||
     !currentRecord.value
@@ -337,6 +340,24 @@ function submitAnswer(event: KeyboardEvent) {
   } else {
     focusInput()
   }
+}
+
+function updateVirtualKeyboardState() {
+  const viewport = window.visualViewport
+  if (!viewport) return
+  const inputFocused =
+    document.activeElement?.classList.contains('answer-input')
+  if (!inputFocused) {
+    maximumVisualViewportHeight = viewport.height
+    virtualKeyboardOpen.value = false
+    return
+  }
+  maximumVisualViewportHeight = Math.max(
+    maximumVisualViewportHeight,
+    viewport.height,
+  )
+  virtualKeyboardOpen.value =
+    maximumVisualViewportHeight - viewport.height > 120
 }
 
 function revealAnswer() {
@@ -483,10 +504,20 @@ function toggleHistoryLocation(questionId: string, target: EventTarget | null) {
     pinnedHistoryLocationId.value === questionId ? null : questionId
 }
 
+onMounted(() => {
+  maximumVisualViewportHeight =
+    window.visualViewport?.height ?? window.innerHeight
+  window.visualViewport?.addEventListener('resize', updateVirtualKeyboardState)
+})
+
 onBeforeUnmount(() => {
   cancelAnimationFrame(animationFrame)
   window.clearTimeout(advanceTimer)
   window.clearTimeout(countdownTimer)
+  window.visualViewport?.removeEventListener(
+    'resize',
+    updateVirtualKeyboardState,
+  )
 })
 </script>
 
@@ -627,6 +658,7 @@ onBeforeUnmount(() => {
         'game-screen-timed': ruleMode === 'timed',
         'game-screen-waiting': phase === 'countdown',
         'game-screen-starting': phase === 'playing' && transitioning,
+        'game-screen-keyboard-open': virtualKeyboardOpen,
       }"
       aria-label="タイピングゲーム"
       :aria-hidden="phase === 'countdown'"
@@ -736,21 +768,25 @@ onBeforeUnmount(() => {
               </template>
             </div>
           </div>
-          <label class="answer-label" :for="`answer-${question.questionId}`">
-            {{ answerLabel }}
-          </label>
-          <input
-            :id="`answer-${question.questionId}`"
-            v-model="input"
-            class="answer-input"
-            type="text"
-            autocomplete="off"
-            autocapitalize="none"
-            spellcheck="false"
-            :disabled="phase !== 'playing' || transitioning"
-            @keydown.enter="submitAnswer"
-          />
-          <p class="input-help">入力後に Enter</p>
+          <form class="answer-form" @submit.prevent="submitAnswer">
+            <label class="answer-label" :for="`answer-${question.questionId}`">
+              {{ answerLabel }}
+            </label>
+            <input
+              :id="`answer-${question.questionId}`"
+              v-model="input"
+              class="answer-input"
+              type="text"
+              autocomplete="off"
+              autocapitalize="none"
+              enterkeyhint="done"
+              spellcheck="false"
+              :disabled="phase !== 'playing' || transitioning"
+              @compositionstart="composing = true"
+              @compositionend="composing = false"
+            />
+            <p class="input-help">入力後に Enter</p>
+          </form>
           <p class="feedback" :data-kind="feedbackKind" aria-live="polite">
             {{ feedback }}
           </p>

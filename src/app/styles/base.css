@@ -577,6 +577,9 @@ button:disabled {
   font-size: 14px;
   font-weight: 600;
 }
+.answer-form {
+  display: contents;
+}
 .answer-input {
   width: min(100%, 520px);
   height: 48px;
@@ -876,6 +879,33 @@ td small {
   th,
   td {
     padding-inline: var(--space-1);
+  }
+}
+@media (max-width: 760px) and (orientation: portrait) {
+  .game-screen-keyboard-open {
+    padding-top: var(--space-2);
+  }
+  .game-screen-keyboard-open .game-status {
+    padding-bottom: var(--space-2);
+  }
+  .game-screen-keyboard-open .municipality-name,
+  .game-screen-keyboard-open .question-prompt {
+    margin: var(--space-2) 0 var(--space-1);
+    font-size: clamp(20px, 6vw, 26px);
+  }
+  .game-screen-keyboard-open .shape-frame {
+    height: min(112px, 22dvh);
+    margin-bottom: var(--space-2);
+  }
+  .game-screen-keyboard-open .answer-label {
+    margin-bottom: var(--space-1);
+  }
+  .game-screen-keyboard-open .input-help {
+    margin-top: var(--space-1);
+  }
+  .game-screen-keyboard-open .feedback {
+    min-height: 20px;
+    margin: var(--space-1) 0;
   }
 }
 @media (prefers-reduced-motion: reduce) {
