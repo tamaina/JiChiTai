@@ -21,7 +21,7 @@ pnpm dev
 pnpm check       # format、lint、型、単体テスト、ビルド
 pnpm test:e2e    # Playwright E2E
 pnpm preview     # 本番ビルドのローカルプレビュー
-pnpm deploy      # Cloudflare Workersへ手動デプロイ
+pnpm run deploy  # Cloudflare Workersへ手動デプロイ
 pnpm geo:build   # 全国の境界形状と自治体データを再生成
 ```
 
