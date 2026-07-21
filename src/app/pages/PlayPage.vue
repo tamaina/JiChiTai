@@ -33,7 +33,8 @@ import type {
   RuleMode,
 } from '../../shared/types/game'
 
-type Phase = 'select' | 'loading' | 'playing' | 'revealed' | 'finished'
+type Phase =
+  'select' | 'loading' | 'countdown' | 'playing' | 'revealed' | 'finished'
 
 const phase = ref<Phase>('select')
 const gameType = ref<GameType>('prefecture-from-municipality')
@@ -59,10 +60,14 @@ const hoveredHistoryLocationId = ref<string | null>(null)
 const pinnedHistoryLocationId = ref<string | null>(null)
 const historyLocationPosition = ref({ top: 0, left: 0 })
 const historyLocationAbove = ref(false)
+const countdownValue = ref(3)
 let gameStartedAt = 0
 let questionStartedAt = 0
 let animationFrame = 0
 let advanceTimer = 0
+let countdownTimer = 0
+const countdownBeatMs = 600
+const initialQuestionTransitionMs = 600
 
 watch(prefectureCode, (code) => {
   if (code && gameType.value === 'prefecture-from-municipality')
@@ -199,6 +204,7 @@ function tick(now: number) {
 }
 
 async function startGame() {
+  window.clearTimeout(countdownTimer)
   phase.value = 'loading'
   feedback.value = ''
   history.value = []
@@ -221,17 +227,39 @@ async function startGame() {
     nextCursor.value = session.nextCursor
     totalQuestions.value = session.totalQuestions
     remainingMs.value = session.durationMs
-    phase.value = 'playing'
     transitioning.value = false
-    gameStartedAt = performance.now()
-    questionStartedAt = gameStartedAt
-    if (ruleMode.value === 'timed') animationFrame = requestAnimationFrame(tick)
-    focusInput()
+    startCountdown()
   } catch {
     phase.value = 'select'
     feedbackKind.value = 'error'
     feedback.value = '問題を取得できませんでした。もう一度お試しください。'
   }
+}
+
+function beginGameplay() {
+  phase.value = 'playing'
+  transitioning.value = true
+  countdownTimer = window.setTimeout(() => {
+    transitioning.value = false
+    gameStartedAt = performance.now()
+    questionStartedAt = gameStartedAt
+    if (ruleMode.value === 'timed') animationFrame = requestAnimationFrame(tick)
+    focusInput()
+  }, initialQuestionTransitionMs)
+}
+
+function startCountdown() {
+  phase.value = 'countdown'
+  countdownValue.value = 3
+  const advanceCountdown = () => {
+    if (countdownValue.value > 1) {
+      countdownValue.value -= 1
+      countdownTimer = window.setTimeout(advanceCountdown, countdownBeatMs)
+      return
+    }
+    beginGameplay()
+  }
+  countdownTimer = window.setTimeout(advanceCountdown, countdownBeatMs)
 }
 
 function addHistory(
@@ -408,6 +436,7 @@ async function shareResult() {
 function resetGame() {
   cancelAnimationFrame(animationFrame)
   window.clearTimeout(advanceTimer)
+  window.clearTimeout(countdownTimer)
   phase.value = 'select'
   history.value = []
   feedback.value = ''
@@ -457,6 +486,7 @@ function toggleHistoryLocation(questionId: string, target: EventTarget | null) {
 onBeforeUnmount(() => {
   cancelAnimationFrame(animationFrame)
   window.clearTimeout(advanceTimer)
+  window.clearTimeout(countdownTimer)
 })
 </script>
 
@@ -590,170 +620,193 @@ onBeforeUnmount(() => {
     </p>
   </section>
 
-  <section
-    v-else-if="phase !== 'finished'"
-    class="game-screen"
-    :class="{ 'game-screen-timed': ruleMode === 'timed' }"
-    aria-label="タイピングゲーム"
-  >
-    <header class="game-status">
-      <span>{{
-        ruleMode === 'timed' ? `残り ${formattedTime}` : '練習中'
-      }}</span>
-      <template v-if="ruleMode === 'practice'">
-        <span>正解 {{ correctCount }}</span>
-        <span>{{ questionIndex + 1 }} / {{ totalQuestions }}</span>
-      </template>
-    </header>
-
-    <TransitionGroup
-      name="question-slide"
-      tag="div"
-      class="question-stage"
-      @after-enter="focusInput"
+  <div v-else-if="phase !== 'finished'" class="game-start-stage">
+    <section
+      class="game-screen"
+      :class="{
+        'game-screen-timed': ruleMode === 'timed',
+        'game-screen-waiting': phase === 'countdown',
+        'game-screen-starting': phase === 'playing' && transitioning,
+      }"
+      aria-label="タイピングゲーム"
+      :aria-hidden="phase === 'countdown'"
+      :inert="phase === 'countdown'"
     >
-      <div
-        v-for="question in displayedQuestions"
-        :key="question.questionId"
-        class="question"
-        :class="{
-          'question-current':
-            question.questionId === currentQuestion?.questionId,
-          'question-next': question.questionId !== currentQuestion?.questionId,
-        }"
-        :aria-hidden="question.questionId !== currentQuestion?.questionId"
-        :inert="question.questionId !== currentQuestion?.questionId"
+      <header class="game-status">
+        <span>{{
+          ruleMode === 'timed' ? `残り ${formattedTime}` : '練習中'
+        }}</span>
+        <template v-if="ruleMode === 'practice'">
+          <span>正解 {{ correctCount }}</span>
+          <span>{{ questionIndex + 1 }} / {{ totalQuestions }}</span>
+        </template>
+      </header>
+
+      <TransitionGroup
+        name="question-slide"
+        tag="div"
+        class="question-stage"
+        @after-enter="focusInput"
       >
-        <p
-          v-if="gameType !== 'municipality-from-shape'"
-          class="municipality-name"
+        <div
+          v-for="question in displayedQuestions"
+          :key="question.questionId"
+          class="question"
+          :class="{
+            'question-current':
+              question.questionId === currentQuestion?.questionId,
+            'question-next':
+              question.questionId !== currentQuestion?.questionId,
+          }"
+          :aria-hidden="question.questionId !== currentQuestion?.questionId"
+          :inert="question.questionId !== currentQuestion?.questionId"
         >
-          <span class="place-name-parts">
-            <span
-              v-if="gameType === 'municipality-typing'"
-              class="place-name-part"
-            >
-              {{ recordForQuestion(question)?.prefecture.name }}
-            </span>
-            <span class="place-name-part">
-              {{ question.municipalityDisplayName }}
-            </span>
-          </span>
-          <small
-            v-if="
-              gameType === 'municipality-typing' ||
-              gameType === 'prefecture-from-municipality'
-            "
+          <p
+            v-if="gameType !== 'municipality-from-shape'"
+            class="municipality-name"
           >
-            <span
-              v-if="recordForQuestion(question)?.districtName"
-              class="reading-part"
-            >
-              {{ recordForQuestion(question)?.districtName }}
+            <span class="place-name-parts">
+              <span
+                v-if="gameType === 'municipality-typing'"
+                class="place-name-part"
+              >
+                {{ recordForQuestion(question)?.prefecture.name }}
+              </span>
+              <span class="place-name-part">
+                {{ question.municipalityDisplayName }}
+              </span>
             </span>
-            <span class="reading-part">
-              {{ recordForQuestion(question)?.kana }}
-            </span>
-          </small>
-        </p>
-        <p v-else class="question-prompt">この形の自治体は？</p>
-        <div class="shape-frame" aria-hidden="true">
-          <div class="shape-slide-item">
-            <img
-              class="question-prefecture-preload"
-              :src="prefectureShapeUrl(question.prefectureCode)"
-              alt=""
-              aria-hidden="true"
-            />
-            <img
-              class="municipality-shape-image"
-              :class="{
-                'municipality-shape-placing':
-                  ruleMode === 'practice' &&
-                  phase === 'revealed' &&
-                  question.questionId === currentQuestion?.questionId,
-              }"
-              :src="question.shapeUrl"
-              :style="{
-                '--placement-to':
-                  recordForQuestion(question)?.placementTransform,
-              }"
-              :alt="
-                phase === 'revealed'
-                  ? recordForQuestion(question)?.name
-                  : '市区町村の形'
-              "
-            />
-            <template
+            <small
               v-if="
-                ruleMode === 'practice' &&
-                phase === 'revealed' &&
-                question.questionId === currentQuestion?.questionId
+                gameType === 'municipality-typing' ||
+                gameType === 'prefecture-from-municipality'
               "
             >
+              <span
+                v-if="recordForQuestion(question)?.districtName"
+                class="reading-part"
+              >
+                {{ recordForQuestion(question)?.districtName }}
+              </span>
+              <span class="reading-part">
+                {{ recordForQuestion(question)?.kana }}
+              </span>
+            </small>
+          </p>
+          <p v-else class="question-prompt">この形の自治体は？</p>
+          <div class="shape-frame" aria-hidden="true">
+            <div class="shape-slide-item">
               <img
-                class="prefecture-placement-image"
+                class="question-prefecture-preload"
                 :src="prefectureShapeUrl(question.prefectureCode)"
                 alt=""
+                aria-hidden="true"
               />
-            </template>
+              <img
+                class="municipality-shape-image"
+                :class="{
+                  'municipality-shape-placing':
+                    ruleMode === 'practice' &&
+                    phase === 'revealed' &&
+                    question.questionId === currentQuestion?.questionId,
+                }"
+                :src="question.shapeUrl"
+                :style="{
+                  '--placement-to':
+                    recordForQuestion(question)?.placementTransform,
+                }"
+                :alt="
+                  phase === 'revealed'
+                    ? recordForQuestion(question)?.name
+                    : '市区町村の形'
+                "
+              />
+              <template
+                v-if="
+                  ruleMode === 'practice' &&
+                  phase === 'revealed' &&
+                  question.questionId === currentQuestion?.questionId
+                "
+              >
+                <img
+                  class="prefecture-placement-image"
+                  :src="prefectureShapeUrl(question.prefectureCode)"
+                  alt=""
+                />
+              </template>
+            </div>
+          </div>
+          <label class="answer-label" :for="`answer-${question.questionId}`">
+            {{ answerLabel }}
+          </label>
+          <input
+            :id="`answer-${question.questionId}`"
+            v-model="input"
+            class="answer-input"
+            type="text"
+            autocomplete="off"
+            autocapitalize="none"
+            spellcheck="false"
+            :disabled="phase !== 'playing' || transitioning"
+            @keydown.enter="submitAnswer"
+          />
+          <p class="input-help">入力後に Enter</p>
+          <p class="feedback" :data-kind="feedbackKind" aria-live="polite">
+            {{ feedback }}
+          </p>
+          <div class="secondary-actions">
+            <button
+              v-if="ruleMode === 'practice' && phase === 'playing'"
+              type="button"
+              class="text-button"
+              @click="revealAnswer"
+            >
+              答えを見る
+            </button>
+            <button
+              v-if="ruleMode === 'practice' && phase === 'revealed'"
+              type="button"
+              class="button"
+              @click="nextQuestion"
+            >
+              次の問題
+            </button>
+            <button
+              v-if="ruleMode === 'practice'"
+              type="button"
+              class="text-button"
+              @click="finishGame(false)"
+            >
+              練習を終了
+            </button>
+            <button
+              v-else
+              type="button"
+              class="text-button"
+              @click="finishGame(false)"
+            >
+              ゲームを中止
+            </button>
           </div>
         </div>
-        <label class="answer-label" :for="`answer-${question.questionId}`">
-          {{ answerLabel }}
-        </label>
-        <input
-          :id="`answer-${question.questionId}`"
-          v-model="input"
-          class="answer-input"
-          type="text"
-          autocomplete="off"
-          autocapitalize="none"
-          spellcheck="false"
-          :disabled="phase !== 'playing' || transitioning"
-          @keydown.enter="submitAnswer"
-        />
-        <p class="input-help">入力後に Enter</p>
-        <p class="feedback" :data-kind="feedbackKind" aria-live="polite">
-          {{ feedback }}
-        </p>
-        <div class="secondary-actions">
-          <button
-            v-if="ruleMode === 'practice' && phase === 'playing'"
-            type="button"
-            class="text-button"
-            @click="revealAnswer"
-          >
-            答えを見る
-          </button>
-          <button
-            v-if="ruleMode === 'practice' && phase === 'revealed'"
-            type="button"
-            class="button"
-            @click="nextQuestion"
-          >
-            次の問題
-          </button>
-          <button
-            v-if="ruleMode === 'practice'"
-            type="button"
-            class="text-button"
-            @click="finishGame(false)"
-          >
-            練習を終了
-          </button>
-          <button
-            v-else
-            type="button"
-            class="text-button"
-            @click="finishGame(false)"
-          >
-            ゲームを中止
-          </button>
-        </div>
+      </TransitionGroup>
+    </section>
+
+    <section
+      v-if="phase === 'countdown'"
+      class="countdown-screen"
+      aria-label="ゲーム開始までのカウントダウン"
+    >
+      <p>READY</p>
+      <div class="countdown-stage" aria-live="assertive" aria-atomic="true">
+        <TransitionGroup name="countdown-slide" appear>
+          <strong :key="countdownValue" class="countdown-number">
+            {{ countdownValue }}
+          </strong>
+        </TransitionGroup>
       </div>
-    </TransitionGroup>
-  </section>
+    </section>
+  </div>
 
   <section v-else class="page-section result-screen">
     <p class="eyebrow">結果</p>

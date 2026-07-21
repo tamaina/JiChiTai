@@ -55,6 +55,7 @@ test('keeps the answer form visible in a landscape viewport', async ({
   await page.goto('/play')
   await page.getByLabel('練習').check()
   await page.getByRole('button', { name: '開始する' }).click()
+  await expect(page.locator('.countdown-number')).toHaveText('3')
   const formIsVisible = await page
     .locator('.question-current .answer-input')
     .evaluate(
@@ -69,7 +70,7 @@ test('shows a shareable result text', async ({ page }) => {
   await page.getByRole('button', { name: '開始する' }).click()
   await page.getByRole('button', { name: '練習を終了' }).click()
   await expect(page.getByLabel('共有用の結果テキスト')).toHaveValue(
-    /^#JiChiTai 都道府県当て 練習\n結果: 正答0問\/誤答0問\/出題1問 \(正答率0%\)\n入力: 0文字 \/ \d+分\d{2}秒 \/ 0 KPM \/ 0 WPM$/,
+    /^#JiChiTai 都道府県当て 練習\n結果: 正答0問\/誤答0問\/出題1問 \(正答率0%\)\n入力: 0文字 \/ \d+分\d{2}秒 \/ 0 KPM \/ 0 WPM\n\nhttps:\/\/jichitai\.aqz\.workers\.dev$/,
   )
   await expect(page.getByRole('button', { name: 'コピー' })).toBeVisible()
 })
@@ -110,7 +111,7 @@ test('shows the compact result after completing every city', async ({
   }
 
   await expect(page.getByLabel('共有用の結果テキスト')).toHaveValue(
-    /^#JiChiTai 鳥取県全市 タイピング\n結果: \d+分\d{2}秒\n入力: [1-9]\d*文字 \/ \d+分\d{2}秒 \/ \d+ KPM \/ \d+(?:\.\d+)? WPM$/,
+    /^#JiChiTai 鳥取県全市 タイピング\n結果: \d+分\d{2}秒\n入力: [1-9]\d*文字 \/ \d+分\d{2}秒 \/ \d+ KPM \/ \d+(?:\.\d+)? WPM\n\nhttps:\/\/jichitai\.aqz\.workers\.dev$/,
   )
   await page.locator('.history-shape-button').first().click()
   const locationPreview = page.locator('.history-location-preview').first()
