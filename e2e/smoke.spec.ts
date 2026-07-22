@@ -82,7 +82,7 @@ test('shows a shareable result text', async ({ page }) => {
   await page.getByRole('button', { name: '練習を終了' }).click()
   await expectShareText(
     page.getByLabel('共有用の結果テキスト'),
-    /^#JiChiTai 都道府県当て 練習\n結果: 正答0問\/誤答0問\/出題1問 \(正答率0%\)\n入力: 0文字\/\d+分\d{2}秒\/0KPM\/0WPM$/,
+    /^#JiChiTai 都道府県当て 練習\n結果: 正答0問\/誤答0問\/出題1問 \(正答率0%\)\nキータイプ: 0回\/\d+分\d{2}秒\/0KPM\/0WPM$/,
   )
   await expect(page.getByRole('button', { name: 'コピー' })).toBeVisible()
 })
@@ -124,7 +124,7 @@ test('shows the compact result after completing every city', async ({
 
   await expectShareText(
     page.getByLabel('共有用の結果テキスト'),
-    /^#JiChiTai 鳥取県全市 タイピング\n結果: \d+分\d{2}秒\n入力: [1-9]\d*文字\/\d+分\d{2}秒\/\d+KPM\/\d+(?:\.\d+)?WPM$/,
+    /^#JiChiTai 鳥取県全市 タイピング\n結果: \d+分\d{2}秒\nキータイプ: [1-9]\d*回\/\d+分\d{2}秒\/\d+KPM\/\d+(?:\.\d+)?WPM$/,
   )
   await page.locator('.history-shape-button').first().click()
   const locationPreview = page.locator('.history-location-preview').first()

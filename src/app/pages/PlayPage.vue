@@ -141,23 +141,23 @@ const formattedResultDuration = computed(() => {
   const totalSeconds = Math.max(0, Math.floor(resultElapsedMs.value / 1000))
   return `${Math.floor(totalSeconds / 60)}分${String(totalSeconds % 60).padStart(2, '0')}秒`
 })
-const typedCharacterCount = computed(() =>
-  history.value.reduce(
-    (total, item) =>
-      total + (item.enteredRaw === null ? 0 : [...item.enteredRaw].length),
-    0,
-  ),
+const keyTypeCount = computed(() =>
+  history.value.reduce((total, item) => {
+    if (item.enteredRaw === null) return total
+    // A recorded answer represents one Enter key press.
+    return total + [...item.enteredRaw].length + 1
+  }, 0),
 )
 const resultKpm = computed(() => {
   const elapsedMinutes = resultElapsedMs.value / 60_000
   return elapsedMinutes > 0
-    ? Math.round(typedCharacterCount.value / elapsedMinutes)
+    ? Math.round(keyTypeCount.value / elapsedMinutes)
     : 0
 })
 const resultWpm = computed(() => Math.round((resultKpm.value / 5) * 10) / 10)
 const typingMetricsText = computed(
   () =>
-    `入力: ${typedCharacterCount.value}文字/${formattedResultDuration.value}/${resultKpm.value}KPM/${resultWpm.value}WPM`,
+    `キータイプ: ${keyTypeCount.value}回/${formattedResultDuration.value}/${resultKpm.value}KPM/${resultWpm.value}WPM`,
 )
 const resultText = computed(() => {
   if (completedPrefectureTyping.value) {
