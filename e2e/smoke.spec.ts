@@ -1,6 +1,17 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Locator } from '@playwright/test'
 import { toRomaji } from 'wanakana'
 import { municipalities } from '../src/shared/data/municipalities'
+
+async function expectShareText(textarea: Locator, expectedContent: RegExp) {
+  const value = await textarea.inputValue()
+  const separatorIndex = value.lastIndexOf('\n\n')
+  expect(separatorIndex).toBeGreaterThan(0)
+  expect(value.slice(0, separatorIndex)).toMatch(expectedContent)
+
+  const shareUrl = new URL(value.slice(separatorIndex + 2))
+  expect(shareUrl.protocol).toBe('https:')
+  expect(shareUrl.hostname).not.toBe('')
+}
 
 for (const path of ['/', '/play', '/about']) {
   test(`${path} opens directly`, async ({ page }) => {
@@ -69,8 +80,9 @@ test('shows a shareable result text', async ({ page }) => {
   await page.getByLabel('練習').check()
   await page.getByRole('button', { name: '開始する' }).click()
   await page.getByRole('button', { name: '練習を終了' }).click()
-  await expect(page.getByLabel('共有用の結果テキスト')).toHaveValue(
-    /^#JiChiTai 都道府県当て 練習\n結果: 正答0問\/誤答0問\/出題1問 \(正答率0%\)\n入力: 0文字 \/ \d+分\d{2}秒 \/ 0 KPM \/ 0 WPM\n\nhttps:\/\/jichitai\.aqz\.workers\.dev$/,
+  await expectShareText(
+    page.getByLabel('共有用の結果テキスト'),
+    /^#JiChiTai 都道府県当て 練習\n結果: 正答0問\/誤答0問\/出題1問 \(正答率0%\)\n入力: 0文字\/\d+分\d{2}秒\/0KPM\/0WPM$/,
   )
   await expect(page.getByRole('button', { name: 'コピー' })).toBeVisible()
 })
@@ -110,8 +122,9 @@ test('shows the compact result after completing every city', async ({
     }
   }
 
-  await expect(page.getByLabel('共有用の結果テキスト')).toHaveValue(
-    /^#JiChiTai 鳥取県全市 タイピング\n結果: \d+分\d{2}秒\n入力: [1-9]\d*文字 \/ \d+分\d{2}秒 \/ \d+ KPM \/ \d+(?:\.\d+)? WPM\n\nhttps:\/\/jichitai\.aqz\.workers\.dev$/,
+  await expectShareText(
+    page.getByLabel('共有用の結果テキスト'),
+    /^#JiChiTai 鳥取県全市 タイピング\n結果: \d+分\d{2}秒\n入力: [1-9]\d*文字\/\d+分\d{2}秒\/\d+KPM\/\d+(?:\.\d+)?WPM$/,
   )
   await page.locator('.history-shape-button').first().click()
   const locationPreview = page.locator('.history-location-preview').first()
