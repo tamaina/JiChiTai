@@ -172,9 +172,9 @@ const resultText = computed(() => {
           : prefectureCode.value === '13'
             ? '全市区町村'
             : '全市町村'
-    return `#JiChiTai ${prefectureName ?? ''}${scope} タイピング\n結果: ${formattedResultDuration.value}\n${typingMetricsText.value}\n\nhttps://jichitai.aqz.workers.dev`
+    return `#JiChiTai ${prefectureName ?? ''}${scope} タイピング\n結果: ${formattedResultDuration.value}\n${typingMetricsText.value}\n\nhttps://jichitai.a9z.dev`
   }
-  return `#JiChiTai ${gameTypeLabel.value} ${ruleModeLabel.value}\n結果: 正答${correctCount.value}問/誤答${incorrectCount.value}問/出題${presentedCount.value}問 (正答率${accuracy.value}%)\n${typingMetricsText.value}\n\nhttps://jichitai.aqz.workers.dev`
+  return `#JiChiTai ${gameTypeLabel.value} ${ruleModeLabel.value}\n結果: 正答${correctCount.value}問/誤答${incorrectCount.value}問/出題${presentedCount.value}問 (正答率${accuracy.value}%)\n${typingMetricsText.value}\n\nhttps://jichitai.a9z.dev`
 })
 const canShare = computed(
   () =>
@@ -926,6 +926,7 @@ onBeforeUnmount(() => {
             v-for="item in history"
             :key="item.questionId"
             class="history-row"
+            :class="`history-row-${item.result}`"
           >
             <td class="history-shape-cell">
               <button
@@ -983,16 +984,18 @@ onBeforeUnmount(() => {
               <code>{{ item.enteredRaw ?? '—' }}</code
               ><small>{{ item.expectedCanonical }}</small>
             </td>
-            <td>
-              {{
-                item.result === 'correct'
-                  ? '正解'
-                  : item.result === 'incorrect'
-                    ? '誤答'
-                    : item.result === 'revealed'
-                      ? '回答表示'
-                      : '時間切れ'
-              }}
+            <td class="history-result-cell">
+              <span class="history-result-badge">
+                {{
+                  item.result === 'correct'
+                    ? '正解'
+                    : item.result === 'incorrect'
+                      ? '誤答'
+                      : item.result === 'revealed'
+                        ? '回答表示'
+                        : '時間切れ'
+                }}
+              </span>
             </td>
             <td>{{ (item.elapsedMs / 1000).toFixed(1) }}秒</td>
           </tr>

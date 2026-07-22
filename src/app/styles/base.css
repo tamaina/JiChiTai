@@ -685,6 +685,26 @@ button:disabled {
 .history-table-wrap {
   overflow-x: auto;
 }
+.history-row-incorrect {
+  background: color-mix(in srgb, var(--color-danger) 12%, transparent);
+  box-shadow: inset 4px 0 var(--color-danger);
+}
+.history-row-incorrect:hover {
+  background: color-mix(in srgb, var(--color-danger) 18%, transparent);
+}
+.history-result-badge {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  padding: 2px var(--space-2);
+  border-radius: 999px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.history-row-incorrect .history-result-badge {
+  background: var(--color-danger);
+  color: var(--color-bg);
+}
 .history-shape-cell {
   width: 64px;
   padding-left: 0;
