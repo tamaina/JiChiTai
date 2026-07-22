@@ -34,14 +34,19 @@ export class ApiError extends Error {
 export async function replenishQuestions(
   sessionId: string,
   gameType: GameConfig['gameType'],
-  citiesOnly: boolean,
+  municipalityFilter: GameConfig['municipalityFilter'],
   prefectureCode: string | null,
   cursor: number,
 ): Promise<QuestionBatchResponse> {
   const response = await fetch(`/api/game-sessions/${sessionId}/questions`, {
     method: 'POST',
     headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
-    body: JSON.stringify({ gameType, citiesOnly, prefectureCode, cursor }),
+    body: JSON.stringify({
+      gameType,
+      municipalityFilter,
+      prefectureCode,
+      cursor,
+    }),
   })
   const body = await readJson(response)
   if (!response.ok)

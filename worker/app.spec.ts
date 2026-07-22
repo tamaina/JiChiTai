@@ -85,7 +85,7 @@ describe('Worker API', () => {
       body: JSON.stringify({
         gameType: 'prefecture-from-municipality',
         ruleMode: 'practice',
-        citiesOnly: true,
+        municipalityFilter: 'cities-only',
       }),
     })
     const body = (await response.json()) as {
@@ -97,6 +97,21 @@ describe('Worker API', () => {
         question.municipalityDisplayName.endsWith('市'),
       ),
     ).toBe(true)
+  })
+
+  it('filters questions to the population top 1000', async () => {
+    const response = await createApp().request('/api/game-sessions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        gameType: 'prefecture-from-municipality',
+        ruleMode: 'practice',
+        municipalityFilter: 'population-top-1000',
+      }),
+    })
+    const body = (await response.json()) as { totalQuestions: number }
+    expect(response.status).toBe(200)
+    expect(body.totalQuestions).toBe(1000)
   })
 
   it('filters questions to a prefecture', async () => {

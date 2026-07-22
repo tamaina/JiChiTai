@@ -29,6 +29,7 @@ import type {
   AnswerHistoryItem,
   GameConfig,
   GameType,
+  MunicipalityFilter,
   QuestionPayload,
   RuleMode,
 } from '../../shared/types/game'
@@ -39,7 +40,7 @@ type Phase =
 const phase = ref<Phase>('select')
 const gameType = ref<GameType>('prefecture-from-municipality')
 const ruleMode = ref<RuleMode>('timed')
-const citiesOnly = ref(false)
+const municipalityFilter = ref<MunicipalityFilter>('all')
 const prefectureCode = ref('')
 const questions = ref<QuestionPayload[]>([])
 const questionIndex = ref(0)
@@ -156,18 +157,21 @@ const resultKpm = computed(() => {
 const resultWpm = computed(() => Math.round((resultKpm.value / 5) * 10) / 10)
 const typingMetricsText = computed(
   () =>
-    `入力: ${typedCharacterCount.value}文字 / ${formattedResultDuration.value} / ${resultKpm.value} KPM / ${resultWpm.value} WPM`,
+    `入力: ${typedCharacterCount.value}文字/${formattedResultDuration.value}/${resultKpm.value}KPM/${resultWpm.value}WPM`,
 )
 const resultText = computed(() => {
   if (completedPrefectureTyping.value) {
     const prefectureName = prefectureOptions.find(
       (item) => item.code === prefectureCode.value,
     )?.name
-    const scope = citiesOnly.value
-      ? '全市'
-      : prefectureCode.value === '13'
-        ? '全市区町村'
-        : '全市町村'
+    const scope =
+      municipalityFilter.value === 'cities-only'
+        ? '全市'
+        : municipalityFilter.value === 'population-top-1000'
+          ? '人口トップ1000'
+          : prefectureCode.value === '13'
+            ? '全市区町村'
+            : '全市町村'
     return `#JiChiTai ${prefectureName ?? ''}${scope} タイピング\n結果: ${formattedResultDuration.value}\n${typingMetricsText.value}\n\nhttps://jichitai.aqz.workers.dev`
   }
   return `#JiChiTai ${gameTypeLabel.value} ${ruleModeLabel.value}\n結果: 正答${correctCount.value}問/誤答${incorrectCount.value}問/出題${presentedCount.value}問 (正答率${accuracy.value}%)\n${typingMetricsText.value}\n\nhttps://jichitai.aqz.workers.dev`
@@ -221,7 +225,7 @@ async function startGame() {
     const config: GameConfig = {
       gameType: gameType.value,
       ruleMode: ruleMode.value,
-      citiesOnly: citiesOnly.value,
+      municipalityFilter: municipalityFilter.value,
       prefectureCode: prefectureCode.value || null,
     }
     const session = await createGameSession(config)
@@ -381,7 +385,7 @@ async function prefetchQuestions() {
     const batch = await replenishQuestions(
       sessionId.value,
       gameType.value,
-      citiesOnly.value,
+      municipalityFilter.value,
       prefectureCode.value || null,
       nextCursor.value,
     )
@@ -550,11 +554,29 @@ onBeforeUnmount(() => {
               </option>
             </select>
           </label>
-          <label class="filter-toggle">
-            <input v-model="citiesOnly" type="checkbox" />
-            <Building2 :size="18" />
-            <span>市のみ出題</span>
-          </label>
+          <div class="municipality-filter" aria-label="市区町村の範囲">
+            <label class="filter-toggle">
+              <input v-model="municipalityFilter" type="radio" value="all" />
+              <span>すべての市区町村</span>
+            </label>
+            <label class="filter-toggle">
+              <input
+                v-model="municipalityFilter"
+                type="radio"
+                value="population-top-1000"
+              />
+              <span>人口トップ1000</span>
+            </label>
+            <label class="filter-toggle">
+              <input
+                v-model="municipalityFilter"
+                type="radio"
+                value="cities-only"
+              />
+              <Building2 :size="18" />
+              <span>市のみ</span>
+            </label>
+          </div>
         </div>
       </div>
     </section>

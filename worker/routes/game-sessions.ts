@@ -4,6 +4,8 @@ import {
   municipalities,
   municipalityShapeUrl,
 } from '../../src/shared/data/municipalities'
+import { populationTop1000MunicipalityCodes } from '../../src/shared/data/population-top-1000'
+import type { MunicipalityFilter } from '../../src/shared/types/game'
 import {
   createGameSessionSchema,
   replenishQuestionsSchema,
@@ -31,12 +33,15 @@ function shuffled<T>(items: readonly T[], seedText: string): T[] {
 }
 
 function filteredMunicipalities(
-  citiesOnly: boolean,
+  municipalityFilter: MunicipalityFilter,
   prefectureCode: string | null,
 ) {
   return municipalities.filter(
     (record) =>
-      (!citiesOnly || record.name.endsWith('市')) &&
+      (municipalityFilter === 'all' ||
+        (municipalityFilter === 'cities-only' && record.name.endsWith('市')) ||
+        (municipalityFilter === 'population-top-1000' &&
+          populationTop1000MunicipalityCodes.has(record.code))) &&
       (!prefectureCode || record.prefectureCode === prefectureCode),
   )
 }
@@ -44,12 +49,12 @@ function filteredMunicipalities(
 function questionBatch(
   sessionId: string,
   gameType: string,
-  citiesOnly: boolean,
+  municipalityFilter: MunicipalityFilter,
   prefectureCode: string | null,
   cursor: number,
 ) {
   const batch = shuffled(
-    filteredMunicipalities(citiesOnly, prefectureCode),
+    filteredMunicipalities(municipalityFilter, prefectureCode),
     sessionId,
   ).slice(cursor, cursor + 10)
   return batch.map((record) => ({
@@ -96,12 +101,12 @@ gameSessionsRoute.post('/', async (context) => {
   const questions = questionBatch(
     sessionId,
     parsed.output.gameType,
-    parsed.output.citiesOnly,
+    parsed.output.municipalityFilter,
     parsed.output.prefectureCode,
     0,
   )
   const municipalityCount = filteredMunicipalities(
-    parsed.output.citiesOnly,
+    parsed.output.municipalityFilter,
     parsed.output.prefectureCode,
   ).length
 
@@ -133,13 +138,13 @@ gameSessionsRoute.post('/:sessionId/questions', async (context) => {
   const questions = questionBatch(
     context.req.param('sessionId'),
     parsed.output.gameType,
-    parsed.output.citiesOnly,
+    parsed.output.municipalityFilter,
     parsed.output.prefectureCode,
     parsed.output.cursor,
   )
   const next = parsed.output.cursor + questions.length
   const municipalityCount = filteredMunicipalities(
-    parsed.output.citiesOnly,
+    parsed.output.municipalityFilter,
     parsed.output.prefectureCode,
   ).length
   return context.json({

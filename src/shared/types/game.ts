@@ -3,11 +3,12 @@ export type GameType =
   | 'municipality-from-shape'
   | 'municipality-typing'
 export type RuleMode = 'timed' | 'practice'
+export type MunicipalityFilter = 'all' | 'population-top-1000' | 'cities-only'
 
 export interface GameConfig {
   gameType: GameType
   ruleMode: RuleMode
-  citiesOnly: boolean
+  municipalityFilter: MunicipalityFilter
   prefectureCode: string | null
 }
 

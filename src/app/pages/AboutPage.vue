@@ -12,6 +12,9 @@ import { ExternalLink } from '@lucide/vue'
       <p>
         日本全国の自治体名と実際の境界形状を使ったタイピングゲームです。市区町村の読みや形を手がかりに、ローマ字入力で遊びながら地名を覚えられます。
       </p>
+      <p>
+        出題範囲は「すべての市区町村」「人口トップ1000」「市のみ」から選べます。「人口トップ1000」は、2020年国勢調査の総人口を基準に、ゲーム収録自治体の上位1,000件を対象としています。
+      </p>
     </section>
 
     <section>
@@ -38,6 +41,17 @@ import { ExternalLink } from '@lucide/vue'
             <ExternalLink :size="15" aria-hidden="true" />
           </a>
           <span>市区町村の行政境界</span>
+        </li>
+        <li>
+          <a
+            href="https://www.nstac.go.jp/use/literacy/ssdse/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            統計センター「教育用標準データセット SSDSE-A-2024」
+            <ExternalLink :size="15" aria-hidden="true" />
+          </a>
+          <span>2020年国勢調査の市区町村別総人口</span>
         </li>
         <li>
           <a

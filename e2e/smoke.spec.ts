@@ -80,7 +80,7 @@ test('shows the compact result after completing every city', async ({
 }) => {
   await page.goto('/play')
   await page.getByRole('combobox', { name: '都道府県' }).selectOption('31')
-  await page.getByLabel('市のみ出題').check()
+  await page.getByLabel('市のみ').check()
   await page.getByLabel('タイピング').check()
   await page.getByLabel('練習').check()
   await page.getByRole('button', { name: '開始する' }).click()

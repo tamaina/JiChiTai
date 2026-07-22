@@ -8,9 +8,12 @@
 
 政令指定都市の行政区は出題せず、区のポリゴンを統合した親市の輪郭を生成します。2024年再編前の旧浜松市7区も現在の浜松市へ統合します。東京都の特別区と北方領土6村は出題対象で、合計は1,747自治体です。投影には自治体中心緯度を標準緯線とする局所正距円筒図法を使い、SVG化前に簡略化します。東京都、鹿児島県、沖縄県の都道府県図は主要領域と全体図を併記します。
 
+「人口トップ1000」フィルタは、独立行政法人統計センターの[教育用標準データセット SSDSE-A-2024](https://www.nstac.go.jp/use/literacy/ssdse/)に収録された2020年国勢調査の総人口を基準に、ゲーム収録自治体を降順に並べた上位1,000自治体です。
+
 ## 生成物
 
 - `src/shared/data/generated-municipalities.ts`: 自治体・都道府県メタデータと配置座標
+- `src/shared/data/population-top-1000.ts`: 2020年国勢調査人口による上位1,000自治体コード
 - `public/generated/geometry/{code}.svg`: 自治体別SVG
 - `public/generated/prefectures/{code}.svg`: 都道府県別SVG
 - `generated/national-dataset-metadata.json`: 入力データのURL・ハッシュ、生成日時、対象湖沼（Git管理対象外）
