@@ -44,7 +44,7 @@ const municipalityFilter = ref<MunicipalityFilter>('all')
 const prefectureCode = ref('')
 const questions = ref<QuestionPayload[]>([])
 const questionIndex = ref(0)
-const input = ref('')
+const inputsByQuestion = ref<Record<string, string>>({})
 const feedback = ref('')
 const feedbackKind = ref<'neutral' | 'correct' | 'error'>('neutral')
 const history = ref<AnswerHistoryItem[]>([])
@@ -64,6 +64,7 @@ const historyLocationAbove = ref(false)
 const countdownValue = ref(3)
 const composing = ref(false)
 const virtualKeyboardOpen = ref(false)
+const preparedQuestionId = ref<string | null>(null)
 let gameStartedAt = 0
 let questionStartedAt = 0
 let animationFrame = 0
@@ -81,6 +82,16 @@ watch(prefectureCode, (code) => {
 const currentQuestion = computed(
   () => questions.value[questionIndex.value] ?? null,
 )
+const input = computed({
+  get: () =>
+    currentQuestion.value
+      ? (inputsByQuestion.value[currentQuestion.value.questionId] ?? '')
+      : '',
+  set: (value: string) => {
+    if (currentQuestion.value)
+      inputsByQuestion.value[currentQuestion.value.questionId] = value
+  },
+})
 const displayedQuestions = computed(() =>
   questions.value.slice(questionIndex.value, questionIndex.value + 2),
 )
@@ -196,6 +207,17 @@ function focusInput() {
   )
 }
 
+async function prepareAndFocusNextInput() {
+  const nextQuestion = questions.value[questionIndex.value + 1]
+  if (!nextQuestion) return
+
+  preparedQuestionId.value = nextQuestion.questionId
+  await nextTick()
+  document
+    .getElementById(`answer-${nextQuestion.questionId}`)
+    ?.focus({ preventScroll: true })
+}
+
 function tick(now: number) {
   if (
     (phase.value !== 'playing' && phase.value !== 'revealed') ||
@@ -216,7 +238,7 @@ async function startGame() {
   feedback.value = ''
   history.value = []
   questionIndex.value = 0
-  input.value = ''
+  inputsByQuestion.value = {}
   resultElapsedMs.value = 0
   shareStatus.value = ''
   hoveredHistoryLocationId.value = null
@@ -301,7 +323,7 @@ function scheduleNextQuestion(delayMs = 500) {
   advanceTimer = window.setTimeout(() => void nextQuestion(), delayMs)
 }
 
-function submitAnswer() {
+async function submitAnswer() {
   if (
     composing.value ||
     phase.value !== 'playing' ||
@@ -321,12 +343,12 @@ function submitAnswer() {
 
   if (isCorrectAnswer(currentRecord.value, gameType.value, raw)) {
     addHistory('correct', raw)
-    input.value = ''
     if (ruleMode.value === 'timed') {
       feedback.value = ''
       nextQuestion()
       return
     }
+    await prepareAndFocusNextInput()
     feedbackKind.value = 'correct'
     feedback.value = `正解 — ${currentRecord.value.prefecture.name}${currentRecord.value.name}`
     phase.value = 'revealed'
@@ -338,7 +360,6 @@ function submitAnswer() {
   feedback.value = '不正解です。'
   if (ruleMode.value === 'timed') {
     addHistory('incorrect', raw)
-    input.value = ''
     feedback.value = ''
     nextQuestion()
   } else {
@@ -410,6 +431,7 @@ function nextQuestion() {
   feedbackKind.value = 'neutral'
   phase.value = 'playing'
   transitioning.value = false
+  preparedQuestionId.value = null
   focusInput()
 }
 
@@ -712,8 +734,14 @@ onBeforeUnmount(() => {
             'question-next':
               question.questionId !== currentQuestion?.questionId,
           }"
-          :aria-hidden="question.questionId !== currentQuestion?.questionId"
-          :inert="question.questionId !== currentQuestion?.questionId"
+          :aria-hidden="
+            question.questionId !== currentQuestion?.questionId &&
+            question.questionId !== preparedQuestionId
+          "
+          :inert="
+            question.questionId !== currentQuestion?.questionId &&
+            question.questionId !== preparedQuestionId
+          "
         >
           <p
             v-if="gameType !== 'municipality-from-shape'"
@@ -796,14 +824,19 @@ onBeforeUnmount(() => {
             </label>
             <input
               :id="`answer-${question.questionId}`"
-              v-model="input"
+              v-model="inputsByQuestion[question.questionId]"
               class="answer-input"
               type="text"
+              inputmode="url"
+              lang="en"
               autocomplete="off"
               autocapitalize="none"
-              enterkeyhint="done"
+              autocorrect="off"
               spellcheck="false"
-              :disabled="phase !== 'playing' || transitioning"
+              :disabled="
+                (phase !== 'playing' || transitioning) &&
+                question.questionId !== preparedQuestionId
+              "
               @compositionstart="composing = true"
               @compositionend="composing = false"
             />
