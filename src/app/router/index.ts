@@ -10,6 +10,10 @@ export const router = createRouter({
     { path: '/play', component: PlayPage },
     { path: '/quiz', component: AreaCodeQuizPage },
     {
+      path: '/review',
+      component: () => import('../pages/ReviewPage.vue'),
+    },
+    {
       path: '/explore',
       component: () => import('../pages/ExplorePage.vue'),
     },

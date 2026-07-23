@@ -7,6 +7,7 @@ import { RouterLink, RouterView } from 'vue-router'
     <header class="site-header">
       <RouterLink class="site-title" to="/">JiChiTai</RouterLink>
       <nav aria-label="メインナビゲーション">
+        <RouterLink to="/review">FSRS暗記</RouterLink>
         <RouterLink to="/explore">自治体一覧</RouterLink>
         <RouterLink to="/quiz">市外局番クイズ</RouterLink>
         <RouterLink to="/about">このゲームについて</RouterLink>

@@ -19,12 +19,70 @@ async function expectShareText(textarea: Locator, expectedContent: RegExp) {
   expect(shareUrl.hostname).not.toBe('')
 }
 
-for (const path of ['/', '/play', '/quiz', '/explore', '/about']) {
+for (const path of ['/', '/play', '/quiz', '/review', '/explore', '/about']) {
   test(`${path} opens directly`, async ({ page }) => {
     await goto(page, path)
     await expect(page.locator('header')).toBeVisible()
   })
 }
+
+test('reviews independently and replaces history only after confirmation', async ({
+  page,
+}) => {
+  await goto(page, '/review')
+  await expect(
+    page.getByRole('heading', { name: 'FSRS暗記モード' }),
+  ).toBeVisible()
+  await expect(page.locator('.review-stats')).toContainText('1747')
+
+  await page.getByRole('button', { name: '最大20枚を学習する' }).click()
+  await expect(page.locator('.review-card-front h1')).toHaveText(
+    municipalities[0].name,
+  )
+  await page.getByRole('button', { name: '答えを見る' }).click()
+  await expect(page.getByRole('button', { name: /^忘れた/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: /^難しい/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: /^普通/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: /^簡単/ })).toBeVisible()
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true)
+  await page.getByRole('button', { name: /^普通/ }).click()
+  await page.getByRole('button', { name: '学習を終了' }).click()
+  await expect(page.locator('.review-stats')).toContainText('1学習済み')
+
+  await page.getByLabel('輪郭 → 自治体').check()
+  await expect(page.locator('.review-stats')).toContainText('0学習済み')
+  await page.getByLabel('自治体名 → 都道府県').check()
+
+  const downloadPromise = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'JSONを書き出す' }).click()
+  const download = await downloadPromise
+  const exportPath = await download.path()
+  expect(exportPath).not.toBeNull()
+
+  await page.getByRole('button', { name: '最大20枚を学習する' }).click()
+  await page.getByRole('button', { name: '答えを見る' }).click()
+  await page.getByRole('button', { name: /^普通/ }).click()
+  await page.getByRole('button', { name: '学習を終了' }).click()
+  await expect(page.locator('.review-stats')).toContainText('2学習済み')
+
+  page.once('dialog', (dialog) => dialog.dismiss())
+  await page.locator('input[type="file"]').setInputFiles(exportPath!)
+  await expect(page.getByRole('status')).toContainText(
+    '読み込みをキャンセルしました。',
+  )
+  await expect(page.locator('.review-stats')).toContainText('2学習済み')
+
+  page.once('dialog', (dialog) => dialog.accept())
+  await page.locator('input[type="file"]').setInputFiles(exportPath!)
+  await expect(page.getByRole('status')).toContainText(
+    '1件の学習履歴に置き換えました。',
+  )
+  await expect(page.locator('.review-stats')).toContainText('1学習済み')
+})
 
 test('plays both directions of the area-code quiz', async ({ page }) => {
   await goto(page, '/quiz')
