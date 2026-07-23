@@ -685,6 +685,10 @@ button:disabled {
 .history-table-wrap {
   overflow-x: auto;
 }
+.history-table-wrap table {
+  min-width: 640px;
+  table-layout: fixed;
+}
 .history-row-incorrect {
   background: color-mix(in srgb, var(--color-danger) 12%, transparent);
   box-shadow: inset 4px 0 var(--color-danger);
@@ -734,6 +738,25 @@ button:disabled {
 }
 .history-question-cell {
   position: relative;
+  width: min(34vw, 18rem);
+}
+.history-question-button,
+.history-entered-answer,
+.history-expected-answer {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.history-question-button {
+  display: block;
+}
+.history-answer-cell {
+  width: min(32vw, 17rem);
+}
+.history-entered-answer,
+.history-expected-answer {
+  display: block;
+  white-space: normal;
 }
 .history-question-button small {
   pointer-events: none;
@@ -904,6 +927,12 @@ td small {
   th,
   td {
     padding-inline: var(--space-1);
+  }
+  .history-question-cell {
+    width: 15rem;
+  }
+  .history-answer-cell {
+    width: 14rem;
   }
 }
 @media (max-width: 760px) and (orientation: portrait) {

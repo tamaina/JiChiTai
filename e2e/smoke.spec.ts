@@ -167,6 +167,16 @@ test('shows the compact result after completing every city', async ({
     position: { x: 4, y: 4 },
   })
   await expect(page.locator('.history-location-preview')).toHaveCount(0)
+
+  const enteredAnswer = page.locator('.history-entered-answer').first()
+  const expectedAnswer = page.locator('.history-expected-answer').first()
+  await expect(enteredAnswer).toHaveCSS('overflow-wrap', 'anywhere')
+  await expect(expectedAnswer).toHaveCSS('overflow-wrap', 'anywhere')
+  const answerCellWidth = await page
+    .locator('.history-answer-cell')
+    .first()
+    .evaluate((element) => element.getBoundingClientRect().width)
+  expect(answerCellWidth).toBeLessThanOrEqual(280)
 })
 
 test('starts a practice game and accepts a correct answer', async ({

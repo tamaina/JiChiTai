@@ -1013,9 +1013,13 @@ onBeforeUnmount(() => {
                 </small>
               </button>
             </td>
-            <td>
-              <code>{{ item.enteredRaw ?? '—' }}</code
-              ><small>{{ item.expectedCanonical }}</small>
+            <td class="history-answer-cell">
+              <code class="history-entered-answer">{{
+                item.enteredRaw ?? '—'
+              }}</code>
+              <small class="history-expected-answer">{{
+                item.expectedCanonical
+              }}</small>
             </td>
             <td class="history-result-cell">
               <span class="history-result-badge">
