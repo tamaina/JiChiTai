@@ -2,6 +2,7 @@ import * as v from 'valibot'
 
 export const gameTypeSchema = v.picklist([
   'prefecture-from-municipality',
+  'prefecture-from-emblem',
   'municipality-from-shape',
   'municipality-typing',
 ])
@@ -18,7 +19,10 @@ const prefectureCodeSchema = v.pipe(
 
 const compatibleFilterSchema = v.check(
   (input: { gameType: string; prefectureCode?: string | null }) =>
-    !input.prefectureCode || input.gameType !== 'prefecture-from-municipality',
+    !input.prefectureCode ||
+    !['prefecture-from-municipality', 'prefecture-from-emblem'].includes(
+      input.gameType,
+    ),
 )
 
 export const createGameSessionSchema = v.pipe(
@@ -37,6 +41,7 @@ export const questionSchema = v.object({
   prefectureCode: v.string(),
   municipalityDisplayName: v.optional(v.string()),
   shapeUrl: v.string(),
+  emblemUrl: v.optional(v.string()),
 })
 
 export const gameSessionResponseSchema = v.object({

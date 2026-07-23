@@ -5,7 +5,7 @@ import {
   municipalityShapeUrl,
 } from '../../src/shared/data/municipalities'
 import { populationTop1000MunicipalityCodes } from '../../src/shared/data/population-top-1000'
-import type { MunicipalityFilter } from '../../src/shared/types/game'
+import type { GameType, MunicipalityFilter } from '../../src/shared/types/game'
 import {
   createGameSessionSchema,
   replenishQuestionsSchema,
@@ -33,6 +33,7 @@ function shuffled<T>(items: readonly T[], seedText: string): T[] {
 }
 
 function filteredMunicipalities(
+  gameType: GameType,
   municipalityFilter: MunicipalityFilter,
   prefectureCode: string | null,
 ) {
@@ -42,29 +43,34 @@ function filteredMunicipalities(
         (municipalityFilter === 'cities-only' && record.name.endsWith('市')) ||
         (municipalityFilter === 'population-top-1000' &&
           populationTop1000MunicipalityCodes.has(record.code))) &&
-      (!prefectureCode || record.prefectureCode === prefectureCode),
+      (!prefectureCode || record.prefectureCode === prefectureCode) &&
+      (gameType !== 'prefecture-from-emblem' || Boolean(record.emblem)),
   )
 }
 
 function questionBatch(
   sessionId: string,
-  gameType: string,
+  gameType: GameType,
   municipalityFilter: MunicipalityFilter,
   prefectureCode: string | null,
   cursor: number,
 ) {
   const batch = shuffled(
-    filteredMunicipalities(municipalityFilter, prefectureCode),
+    filteredMunicipalities(gameType, municipalityFilter, prefectureCode),
     sessionId,
   ).slice(cursor, cursor + 10)
   return batch.map((record) => ({
     questionId: `${sessionId}-${record.code}`,
     municipalityCode: record.code,
     prefectureCode: record.prefectureCode,
-    ...(gameType === 'municipality-from-shape'
+    ...(gameType === 'municipality-from-shape' ||
+    gameType === 'prefecture-from-emblem'
       ? {}
       : { municipalityDisplayName: record.name }),
     shapeUrl: municipalityShapeUrl(record.code),
+    ...(gameType === 'prefecture-from-emblem'
+      ? { emblemUrl: record.emblem?.imageUrl }
+      : {}),
   }))
 }
 
@@ -106,6 +112,7 @@ gameSessionsRoute.post('/', async (context) => {
     0,
   )
   const municipalityCount = filteredMunicipalities(
+    parsed.output.gameType,
     parsed.output.municipalityFilter,
     parsed.output.prefectureCode,
   ).length
@@ -144,6 +151,7 @@ gameSessionsRoute.post('/:sessionId/questions', async (context) => {
   )
   const next = parsed.output.cursor + questions.length
   const municipalityCount = filteredMunicipalities(
+    parsed.output.gameType,
     parsed.output.municipalityFilter,
     parsed.output.prefectureCode,
   ).length

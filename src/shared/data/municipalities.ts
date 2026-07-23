@@ -3,6 +3,10 @@ import {
   generatedPrefectures,
 } from './generated-municipalities'
 import { generatedAreaCodes } from './generated-area-codes'
+import {
+  generatedEmblems,
+  type GeneratedEmblemRecord,
+} from './generated-emblems'
 
 export interface PrefectureRecord {
   code: string
@@ -24,6 +28,7 @@ export interface MunicipalityRecord extends GeneratedMunicipalityRecord {
   primaryAreaCode: string | null
   areaCodes: string[]
   representativePhone: string | null
+  emblem: GeneratedEmblemRecord | null
 }
 
 export const prefectures = generatedPrefectures
@@ -34,6 +39,9 @@ export const prefectureByCode = new Map(
 
 const areaCodeByMunicipalityCode = new Map(
   generatedAreaCodes.map((item) => [item.code, item]),
+)
+const emblemByMunicipalityCode = new Map(
+  generatedEmblems.map((item) => [item.code, item]),
 )
 
 export const municipalities: MunicipalityRecord[] = generatedMunicipalities.map(
@@ -48,6 +56,7 @@ export const municipalities: MunicipalityRecord[] = generatedMunicipalities.map(
       primaryAreaCode: areaCode?.primaryAreaCode ?? null,
       areaCodes: areaCode?.areaCodes ?? [],
       representativePhone: areaCode?.representativePhone ?? null,
+      emblem: emblemByMunicipalityCode.get(item.code) ?? null,
     }
   },
 )

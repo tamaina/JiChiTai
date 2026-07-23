@@ -116,6 +116,7 @@ describe('roman input', () => {
     expect(canonicalAnswer(fujioka, 'prefecture-from-municipality')).toBe(
       'gunmakenn',
     )
+    expect(canonicalAnswer(fujioka, 'prefecture-from-emblem')).toBe('gunmakenn')
   })
 
   it('distinguishes valid wrong places from arbitrary text', () => {

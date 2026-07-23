@@ -16,13 +16,21 @@
 
 代表局番と追加局番は区別して保持します。自治体から局番を答えるクイズではどちらも正解ですが、回答表示では本庁局番を先に示します。J-LISに掲載されない北方領土6村は市外局番クイズの対象外です。
 
+## 市区町村章
+
+`pnpm emblems:build`は、Wikidataの市区町村コード（P429）と紋章画像（P94）を対応付け、Wikimedia Commons APIで画像ごとのライセンスを確認します。Public domain、CC0、CC BY、CC BY-SAのいずれかを明示した画像だけをローカルへ保存します。
+
+画像がない自治体や、自由利用できるライセンスを機械的に確認できない自治体は市区町村章クイズから除外します。作者名、ライセンス、Commons上の出典ページは各問題の回答表示から確認できます。
+
 ## 生成物
 
 - `src/shared/data/generated-municipalities.ts`: 自治体・都道府県メタデータと配置座標
 - `src/shared/data/generated-area-codes.ts`: 本庁代表電話、市外局番、追加局番と出典
+- `src/shared/data/generated-emblems.ts`: 利用可能な市区町村章と作者・ライセンス・出典
 - `src/shared/data/population-top-1000.ts`: 2020年国勢調査人口による上位1,000自治体コード
 - `public/generated/geometry/{code}.svg`: 自治体別SVG
 - `public/generated/prefectures/{code}.svg`: 都道府県別SVG
+- `public/generated/emblems/{code}.{svg,png,...}`: ライセンス確認済みの市区町村章
 - `generated/national-dataset-metadata.json`: 入力データのURL・ハッシュ、生成日時、対象湖沼（Git管理対象外）
 
 生成処理は行政界と湖沼データをネットワークから取得し、最大4GBのNode.jsヒープを使用します。生成後は`src/shared/data/generated-municipalities.ts`をPrettierで整形してください。

@@ -28,7 +28,7 @@ export function canonicalAnswer(
   record: MunicipalityRecord,
   gameType: GameType,
 ): string {
-  return gameType === 'prefecture-from-municipality'
+  return isPrefectureAnswerGame(gameType)
     ? kanaToImeKeystrokes(record.prefecture.kana)
     : kanaToImeKeystrokes(`${record.prefecture.kana}${record.kana}`)
 }
@@ -37,8 +37,7 @@ export function acceptedAnswers(
   record: MunicipalityRecord,
   gameType: GameType,
 ): string[] {
-  if (gameType === 'prefecture-from-municipality')
-    return [record.prefecture.kana]
+  if (isPrefectureAnswerGame(gameType)) return [record.prefecture.kana]
   return [`${record.prefecture.kana}${record.kana}`]
 }
 
@@ -54,10 +53,17 @@ export function isCorrectAnswer(
 
 export function isValidPlaceAnswer(gameType: GameType, value: string): boolean {
   const kana = romanToComparableKana(value)
-  if (gameType === 'prefecture-from-municipality') {
+  if (isPrefectureAnswerGame(gameType)) {
     return prefectures.some((prefecture) => prefecture.kana === kana)
   }
   return municipalities.some((record) =>
     acceptedAnswers(record, gameType).includes(kana),
+  )
+}
+
+export function isPrefectureAnswerGame(gameType: GameType): boolean {
+  return (
+    gameType === 'prefecture-from-municipality' ||
+    gameType === 'prefecture-from-emblem'
   )
 }

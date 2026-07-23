@@ -634,6 +634,28 @@ button:disabled {
     transform 500ms ease,
     filter 200ms ease;
 }
+.municipality-emblem-image {
+  width: 100%;
+  height: 100%;
+  padding: clamp(12px, 5%, 32px);
+  object-fit: contain;
+}
+.emblem-attribution {
+  z-index: 2;
+  grid-area: shape;
+  align-self: end;
+  justify-self: center;
+  margin: calc(-1 * var(--space-4)) auto var(--space-3);
+  padding: 2px var(--space-1);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--color-bg) 90%, transparent);
+  color: var(--color-muted);
+  font-size: 12px;
+}
+.emblem-attribution a,
+.history-emblem-attribution a {
+  color: inherit;
+}
 .prefecture-placement-image {
   position: absolute;
   inset: 0;
@@ -820,6 +842,9 @@ button:disabled {
   height: 56px;
   object-fit: contain;
 }
+.history-emblem {
+  padding: 4px;
+}
 .history-question-cell {
   position: relative;
   width: min(34vw, 18rem);
@@ -833,6 +858,13 @@ button:disabled {
 }
 .history-question-button {
   display: block;
+}
+.history-emblem-attribution {
+  display: block;
+  margin-top: var(--space-1);
+  color: var(--color-muted);
+  font-size: 11px;
+  overflow-wrap: anywhere;
 }
 .history-answer-cell {
   width: min(32vw, 17rem);
@@ -1103,6 +1135,9 @@ td small {
   }
   .game-screen-keyboard-open .shape-frame {
     max-height: 96px;
+  }
+  .game-screen-keyboard-open .municipality-emblem-image {
+    padding: 4px;
   }
 }
 @media (prefers-reduced-motion: reduce) {

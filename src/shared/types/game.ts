@@ -1,5 +1,6 @@
 export type GameType =
   | 'prefecture-from-municipality'
+  | 'prefecture-from-emblem'
   | 'municipality-from-shape'
   | 'municipality-typing'
 export type RuleMode = 'timed' | 'practice'
@@ -18,6 +19,7 @@ export interface QuestionPayload {
   prefectureCode: string
   municipalityDisplayName?: string
   shapeUrl: string
+  emblemUrl?: string
 }
 
 export interface GameSessionResponse {
@@ -47,6 +49,13 @@ export interface AnswerHistoryItem {
   placeReading: string
   primaryAreaCode: string | null
   areaCodes: string[]
+  emblem: {
+    imageUrl: string
+    sourceUrl: string
+    author: string
+    licenseName: string
+    licenseUrl: string | null
+  } | null
   expectedCanonical: string
   enteredRaw: string | null
   enteredNormalized: string | null

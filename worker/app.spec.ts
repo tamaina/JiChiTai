@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { createApp } from './app'
+import { generatedEmblems } from '../src/shared/data/generated-emblems'
 
 describe('Worker API', () => {
   it('returns a JSON health response', async () => {
@@ -78,6 +79,33 @@ describe('Worker API', () => {
     ).toBe(true)
   })
 
+  it('only serves licensed emblem questions without revealing the name', async () => {
+    const response = await createApp().request('/api/game-sessions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        gameType: 'prefecture-from-emblem',
+        ruleMode: 'practice',
+      }),
+    })
+    const body = (await response.json()) as {
+      totalQuestions: number
+      questions: Array<{
+        municipalityDisplayName?: string
+        emblemUrl?: string
+      }>
+    }
+    expect(response.status).toBe(200)
+    expect(body.totalQuestions).toBe(generatedEmblems.length)
+    expect(
+      body.questions.every(
+        (question) =>
+          question.municipalityDisplayName === undefined &&
+          question.emblemUrl?.startsWith('/generated/emblems/'),
+      ),
+    ).toBe(true)
+  })
+
   it('filters questions to cities', async () => {
     const response = await createApp().request('/api/game-sessions', {
       method: 'POST',
@@ -139,6 +167,19 @@ describe('Worker API', () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         gameType: 'prefecture-from-municipality',
+        ruleMode: 'practice',
+        prefectureCode: '10',
+      }),
+    })
+    expect(response.status).toBe(400)
+  })
+
+  it('rejects emblem prefecture-answer mode with a prefecture filter', async () => {
+    const response = await createApp().request('/api/game-sessions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        gameType: 'prefecture-from-emblem',
         ruleMode: 'practice',
         prefectureCode: '10',
       }),

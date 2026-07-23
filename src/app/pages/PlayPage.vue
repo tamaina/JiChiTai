@@ -10,6 +10,7 @@ import {
   Play,
   ScanSearch,
   Share2,
+  Shield,
   SlidersHorizontal,
 } from '@lucide/vue'
 import { createGameSession, replenishQuestions } from '../api/client'
@@ -22,6 +23,7 @@ import {
 import {
   canonicalAnswer,
   isCorrectAnswer,
+  isPrefectureAnswerGame,
   isValidPlaceAnswer,
   normalizeRomanInput,
 } from '../../shared/game/roman'
@@ -77,7 +79,7 @@ const initialQuestionTransitionMs = 600
 let maximumVisualViewportHeight = 0
 
 watch(prefectureCode, (code) => {
-  if (code && gameType.value === 'prefecture-from-municipality')
+  if (code && isPrefectureAnswerGame(gameType.value))
     gameType.value = 'municipality-typing'
 })
 
@@ -109,6 +111,9 @@ const openHistoryLocationItem = computed(() =>
   history.value.find((item) => item.questionId === openHistoryLocationId.value),
 )
 const prefectureOptions = prefectures
+const emblemMunicipalityCount = municipalities.filter(
+  (item) => item.emblem,
+).length
 
 function recordForQuestion(question: QuestionPayload) {
   return municipalityByCode.get(question.municipalityCode)
@@ -129,6 +134,7 @@ const accuracy = computed(() => {
 })
 const gameTypeLabel = computed(() => {
   if (gameType.value === 'prefecture-from-municipality') return '都道府県当て'
+  if (gameType.value === 'prefecture-from-emblem') return '市区町村章当て'
   if (gameType.value === 'municipality-from-shape') return '市区町村当て'
   return 'タイピング'
 })
@@ -194,7 +200,7 @@ const canShare = computed(
     typeof navigator !== 'undefined' && typeof navigator.share === 'function',
 )
 const answerLabel = computed(() =>
-  gameType.value === 'prefecture-from-municipality'
+  isPrefectureAnswerGame(gameType.value)
     ? '都道府県 ローマ字入力'
     : '都道府県+市区町村 ローマ字入力',
 )
@@ -315,6 +321,7 @@ function addHistory(
     placeReading: record.kana,
     primaryAreaCode: record.primaryAreaCode,
     areaCodes: record.areaCodes,
+    emblem: record.emblem,
     expectedCanonical: canonicalAnswer(record, gameType.value),
     enteredRaw,
     enteredNormalized:
@@ -642,6 +649,24 @@ onBeforeUnmount(() => {
           <input
             v-model="gameType"
             type="radio"
+            value="prefecture-from-emblem"
+            :disabled="Boolean(prefectureCode)"
+            aria-label="市区町村章当て"
+          />
+          <Shield class="choice-icon" :size="24" />
+          <span class="choice-copy">
+            <strong>市区町村章当て</strong>
+            <small
+              >ライセンス確認済み{{
+                emblemMunicipalityCount
+              }}自治体から出題</small
+            >
+          </span>
+        </label>
+        <label class="choice-card">
+          <input
+            v-model="gameType"
+            type="radio"
             value="municipality-from-shape"
             aria-label="市区町村当て"
           />
@@ -767,7 +792,10 @@ onBeforeUnmount(() => {
           "
         >
           <p
-            v-if="gameType !== 'municipality-from-shape'"
+            v-if="
+              gameType !== 'municipality-from-shape' &&
+              gameType !== 'prefecture-from-emblem'
+            "
             class="municipality-name"
           >
             <span class="place-name-parts">
@@ -798,42 +826,54 @@ onBeforeUnmount(() => {
               </span>
             </small>
           </p>
-          <p v-else class="question-prompt">この形の自治体は？</p>
-          <div class="shape-frame" aria-hidden="true">
+          <p v-else class="question-prompt">
+            {{
+              gameType === 'prefecture-from-emblem'
+                ? 'この市区町村章の都道府県は？'
+                : 'この形の自治体は？'
+            }}
+          </p>
+          <div class="shape-frame">
             <div class="shape-slide-item">
-              <img
-                class="question-prefecture-preload"
-                :src="prefectureShapeUrl(question.prefectureCode)"
-                alt=""
-                aria-hidden="true"
-              />
-              <img
-                class="municipality-shape-image"
-                :class="{
-                  'municipality-shape-placing':
+              <template v-if="gameType === 'prefecture-from-emblem'">
+                <img
+                  class="municipality-emblem-image"
+                  :src="question.emblemUrl"
+                  alt="市区町村章"
+                />
+              </template>
+              <template v-else>
+                <img
+                  class="question-prefecture-preload"
+                  :src="prefectureShapeUrl(question.prefectureCode)"
+                  alt=""
+                  aria-hidden="true"
+                />
+                <img
+                  class="municipality-shape-image"
+                  :class="{
+                    'municipality-shape-placing':
+                      ruleMode === 'practice' &&
+                      phase === 'revealed' &&
+                      question.questionId === currentQuestion?.questionId,
+                  }"
+                  :src="question.shapeUrl"
+                  :style="{
+                    '--placement-to':
+                      recordForQuestion(question)?.placementTransform,
+                  }"
+                  :alt="
+                    phase === 'revealed'
+                      ? recordForQuestion(question)?.name
+                      : '市区町村の形'
+                  "
+                />
+                <img
+                  v-if="
                     ruleMode === 'practice' &&
                     phase === 'revealed' &&
-                    question.questionId === currentQuestion?.questionId,
-                }"
-                :src="question.shapeUrl"
-                :style="{
-                  '--placement-to':
-                    recordForQuestion(question)?.placementTransform,
-                }"
-                :alt="
-                  phase === 'revealed'
-                    ? recordForQuestion(question)?.name
-                    : '市区町村の形'
-                "
-              />
-              <template
-                v-if="
-                  ruleMode === 'practice' &&
-                  phase === 'revealed' &&
-                  question.questionId === currentQuestion?.questionId
-                "
-              >
-                <img
+                    question.questionId === currentQuestion?.questionId
+                  "
                   class="prefecture-placement-image"
                   :src="prefectureShapeUrl(question.prefectureCode)"
                   alt=""
@@ -841,6 +881,34 @@ onBeforeUnmount(() => {
               </template>
             </div>
           </div>
+          <p
+            v-if="
+              gameType === 'prefecture-from-emblem' &&
+              phase === 'revealed' &&
+              question.questionId === currentQuestion?.questionId &&
+              recordForQuestion(question)?.emblem
+            "
+            class="emblem-attribution"
+          >
+            画像:
+            <a
+              :href="recordForQuestion(question)?.emblem?.sourceUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              >{{ recordForQuestion(question)?.emblem?.author }}</a
+            >
+            /
+            <a
+              v-if="recordForQuestion(question)?.emblem?.licenseUrl"
+              :href="recordForQuestion(question)?.emblem?.licenseUrl ?? ''"
+              target="_blank"
+              rel="noopener noreferrer"
+              >{{ recordForQuestion(question)?.emblem?.licenseName }}</a
+            >
+            <span v-else>{{
+              recordForQuestion(question)?.emblem?.licenseName
+            }}</span>
+          </p>
           <form class="answer-form" @submit.prevent="submitAnswer">
             <label class="answer-label" :for="`answer-${question.questionId}`">
               {{ answerLabel }}
@@ -970,7 +1038,7 @@ onBeforeUnmount(() => {
       <table>
         <thead>
           <tr>
-            <th aria-label="形"></th>
+            <th aria-label="形または市区町村章"></th>
             <th>問題</th>
             <th>入力</th>
             <th>結果</th>
@@ -1005,8 +1073,13 @@ onBeforeUnmount(() => {
               >
                 <img
                   class="history-shape"
-                  :src="item.shapeUrl"
-                  :alt="`${item.municipalityName}の形`"
+                  :class="{ 'history-emblem': Boolean(item.emblem) }"
+                  :src="item.emblem?.imageUrl ?? item.shapeUrl"
+                  :alt="
+                    item.emblem
+                      ? `${item.municipalityName}の市区町村章`
+                      : `${item.municipalityName}の形`
+                  "
                   loading="lazy"
                 />
               </button>
@@ -1046,6 +1119,24 @@ onBeforeUnmount(() => {
                   </span>
                 </small>
               </button>
+              <small v-if="item.emblem" class="history-emblem-attribution">
+                画像:
+                <a
+                  :href="item.emblem.sourceUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >{{ item.emblem.author }}</a
+                >
+                /
+                <a
+                  v-if="item.emblem.licenseUrl"
+                  :href="item.emblem.licenseUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >{{ item.emblem.licenseName }}</a
+                >
+                <span v-else>{{ item.emblem.licenseName }}</span>
+              </small>
             </td>
             <td class="history-answer-cell">
               <code class="history-entered-answer">{{

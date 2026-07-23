@@ -72,12 +72,46 @@ test('root page starts at mode selection', async ({ page }) => {
   await expect(page.getByRole('button', { name: '開始する' })).toBeVisible()
 })
 
+test('answers a prefecture from a licensed municipality emblem', async ({
+  page,
+}) => {
+  await goto(page, '/play')
+  await page.getByLabel('市区町村章当て').check()
+  await page.getByLabel('練習').check()
+  await page.getByRole('button', { name: '開始する' }).click()
+
+  const question = page.locator('.question-current:has(.answer-input:enabled)')
+  const emblem = question.getByAltText('市区町村章')
+  await expect(emblem).toBeVisible()
+  await expect
+    .poll(() =>
+      emblem.evaluate((image: HTMLImageElement) => image.naturalWidth),
+    )
+    .toBeGreaterThan(0)
+  await expect(question.locator('.municipality-name')).toHaveCount(0)
+  const source = await emblem.getAttribute('src')
+  const code = source?.match(/(\d{5})\.[a-z]+$/)?.[1]
+  const record = municipalities.find((item) => item.code === code)
+  expect(record?.emblem).toBeTruthy()
+
+  await question
+    .getByLabel('都道府県 ローマ字入力')
+    .fill(toRomaji(record!.prefecture.kana))
+  await question.getByLabel('都道府県 ローマ字入力').press('Enter')
+  await expect(page.locator('.emblem-attribution')).toContainText('画像:')
+  await question.getByRole('button', { name: '練習を終了' }).click()
+  await expect(page.locator('.history-emblem')).toBeVisible()
+  await expect(page.locator('.history-emblem-attribution')).toBeVisible()
+})
+
 test('about page exposes credits as external links', async ({ page }) => {
   await goto(page, '/about')
   for (const name of [
     'e-Stat「市区町村名・コード」',
     'ShiKuChoSon',
     'Hokkaidle',
+    'Wikidata',
+    'Wikimedia Commons',
     'tamaina/JiChiTai',
     'sponsors/tamaina',
   ]) {

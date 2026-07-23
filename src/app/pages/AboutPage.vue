@@ -75,6 +75,28 @@ import { ExternalLink } from '@lucide/vue'
           </a>
           <span>面積10km²以上の湖沼・貯水池の水域形状</span>
         </li>
+        <li>
+          <a
+            href="https://www.wikidata.org/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Wikidata
+            <ExternalLink :size="15" aria-hidden="true" />
+          </a>
+          <span>市区町村コードと市区町村章の対応</span>
+        </li>
+        <li>
+          <a
+            href="https://commons.wikimedia.org/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Wikimedia Commons
+            <ExternalLink :size="15" aria-hidden="true" />
+          </a>
+          <span>ライセンス確認済みの市区町村章画像</span>
+        </li>
       </ul>
     </section>
 
