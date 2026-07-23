@@ -19,12 +19,50 @@ async function expectShareText(textarea: Locator, expectedContent: RegExp) {
   expect(shareUrl.hostname).not.toBe('')
 }
 
-for (const path of ['/', '/play', '/about']) {
+for (const path of ['/', '/play', '/quiz', '/about']) {
   test(`${path} opens directly`, async ({ page }) => {
     await goto(page, path)
     await expect(page.locator('header')).toBeVisible()
   })
 }
+
+test('plays both directions of the area-code quiz', async ({ page }) => {
+  await goto(page, '/quiz')
+  await page.getByRole('button', { name: '10問はじめる' }).click()
+
+  const municipalityHeading = page.locator('.area-code-question h1')
+  const municipalityName = (await municipalityHeading.textContent())
+    ?.replace(/\s/g, '')
+    .trim()
+  const municipality = municipalities.find(
+    (record) => `${record.prefecture.name}${record.name}` === municipalityName,
+  )
+  expect(municipality?.primaryAreaCode).toBeTruthy()
+  await page
+    .getByLabel('市外局番', { exact: true })
+    .fill(municipality!.primaryAreaCode!)
+  await page.getByRole('button', { name: '回答する' }).click()
+  await expect(page.locator('.quiz-feedback > strong')).toHaveText('正解')
+
+  await goto(page, '/quiz')
+  await page.getByLabel('市外局番 → 自治体').check()
+  await page.getByRole('button', { name: '10問はじめる' }).click()
+  const areaCode = (
+    await page.locator('.area-code-number').textContent()
+  )?.trim()
+  const choices = page.locator('.area-code-choices button')
+  const choiceLabels = await choices.allTextContents()
+  const correctChoiceIndex = choiceLabels.findIndex((label) =>
+    municipalities.some(
+      (record) =>
+        `${record.prefecture.name}${record.name}` === label.trim() &&
+        record.areaCodes.includes(areaCode ?? ''),
+    ),
+  )
+  expect(correctChoiceIndex).toBeGreaterThanOrEqual(0)
+  await choices.nth(correctChoiceIndex).click()
+  await expect(page.locator('.quiz-feedback > strong')).toHaveText('正解')
+})
 
 test('root page starts at mode selection', async ({ page }) => {
   await goto(page, '/')

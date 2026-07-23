@@ -10,9 +10,16 @@
 
 「人口トップ1000」フィルタは、独立行政法人統計センターの[教育用標準データセット SSDSE-A-2024](https://www.nstac.go.jp/use/literacy/ssdse/)に収録された2020年国勢調査の総人口を基準に、ゲーム収録自治体を降順に並べた上位1,000自治体です。
 
+## 市外局番
+
+`pnpm area-codes:build`は、地方公共団体情報システム機構（J-LIS）の「地方公共団体コード住所一覧」に掲載された代表電話番号から本庁の市外局番を抽出します。市町村合併後も一部地域だけ異なる市外局番を使う場合は、自治体の公式ページを出典として`data/area-code-overrides.csv`へ追加します。
+
+代表局番と追加局番は区別して保持します。自治体から局番を答えるクイズではどちらも正解ですが、回答表示では本庁局番を先に示します。J-LISに掲載されない北方領土6村は市外局番クイズの対象外です。
+
 ## 生成物
 
 - `src/shared/data/generated-municipalities.ts`: 自治体・都道府県メタデータと配置座標
+- `src/shared/data/generated-area-codes.ts`: 本庁代表電話、市外局番、追加局番と出典
 - `src/shared/data/population-top-1000.ts`: 2020年国勢調査人口による上位1,000自治体コード
 - `public/generated/geometry/{code}.svg`: 自治体別SVG
 - `public/generated/prefectures/{code}.svg`: 都道府県別SVG

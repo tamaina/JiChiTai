@@ -313,6 +313,8 @@ function addHistory(
     prefectureName: record.prefecture.name,
     districtName: record.districtName,
     placeReading: record.kana,
+    primaryAreaCode: record.primaryAreaCode,
+    areaCodes: record.areaCodes,
     expectedCanonical: canonicalAnswer(record, gameType.value),
     enteredRaw,
     enteredNormalized:
@@ -1031,6 +1033,17 @@ onBeforeUnmount(() => {
                 <small>
                   <span v-if="item.districtName">{{ item.districtName }}</span>
                   {{ item.placeReading }}
+                  <span v-if="item.primaryAreaCode">
+                    市外局番 {{ item.primaryAreaCode
+                    }}<template v-if="item.areaCodes.length > 1">
+                      （ほか
+                      {{
+                        item.areaCodes
+                          .filter((code) => code !== item.primaryAreaCode)
+                          .join('、')
+                      }}）
+                    </template>
+                  </span>
                 </small>
               </button>
             </td>

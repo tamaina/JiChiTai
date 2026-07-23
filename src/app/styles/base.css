@@ -370,6 +370,90 @@ p {
   color: var(--color-text);
   font: inherit;
 }
+.area-code-quiz {
+  max-width: 920px;
+}
+.area-code-quiz fieldset {
+  margin: 28px 0;
+  padding: 0;
+  border: 0;
+}
+.area-code-quiz legend {
+  margin-bottom: var(--space-4);
+  font-weight: 600;
+}
+.area-code-quiz select {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+}
+.area-code-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+  margin: var(--space-6) 0;
+}
+.quiz-progress {
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-muted);
+}
+.area-code-question {
+  display: grid;
+  min-height: 520px;
+  align-content: center;
+  justify-items: center;
+  gap: var(--space-5);
+  text-align: center;
+}
+.area-code-question h1 {
+  max-width: none;
+}
+.area-code-number {
+  color: var(--color-accent);
+  font:
+    700 clamp(52px, 14vw, 96px) / 1 ui-monospace,
+    SFMono-Regular,
+    Consolas,
+    monospace;
+}
+.area-code-answer-form {
+  display: grid;
+  width: min(100%, 520px);
+  justify-items: center;
+  gap: var(--space-3);
+}
+.area-code-choices {
+  display: grid;
+  width: min(100%, 680px);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+.area-code-choices .button {
+  min-height: 56px;
+}
+.quiz-feedback {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
+}
+.quiz-feedback > strong {
+  color: var(--color-danger);
+  font-size: 20px;
+}
+.quiz-feedback > strong[data-correct='true'] {
+  color: var(--color-success);
+}
+.quiz-feedback p {
+  margin: 0;
+}
 .start-button {
   display: flex;
   width: fit-content;
@@ -853,6 +937,13 @@ td small {
     width: 38px;
     height: 38px;
     padding: 8px;
+  }
+  .area-code-filter-grid,
+  .area-code-choices {
+    grid-template-columns: 1fr;
+  }
+  .area-code-question {
+    min-height: 480px;
   }
 }
 @media (orientation: landscape) and (min-width: 720px) {

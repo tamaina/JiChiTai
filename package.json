@@ -13,6 +13,7 @@
     "preview": "pnpm build && vite preview",
     "deploy": "pnpm build && wrangler deploy",
     "geo:build": "node --max-old-space-size=4096 scripts/build-national-dataset.mjs",
+    "area-codes:build": "node scripts/build-area-codes.mjs",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
     "typecheck": "vue-tsc --noEmit",
     "lint": "eslint .",

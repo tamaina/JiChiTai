@@ -45,6 +45,8 @@ export interface AnswerHistoryItem {
   prefectureName: string
   districtName: string
   placeReading: string
+  primaryAreaCode: string | null
+  areaCodes: string[]
   expectedCanonical: string
   enteredRaw: string | null
   enteredNormalized: string | null
