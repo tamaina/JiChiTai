@@ -1,6 +1,12 @@
-import { expect, test, type Locator } from '@playwright/test'
+import { expect, test, type Locator, type Page } from './test'
 import { toRomaji } from 'wanakana'
 import { municipalities } from '../src/shared/data/municipalities'
+
+const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://127.0.0.1:4173'
+
+async function goto(page: Page, pathname: string) {
+  await page.goto(new URL(pathname, baseURL).href)
+}
 
 async function expectShareText(textarea: Locator, expectedContent: RegExp) {
   const value = await textarea.inputValue()
@@ -15,13 +21,13 @@ async function expectShareText(textarea: Locator, expectedContent: RegExp) {
 
 for (const path of ['/', '/play', '/about']) {
   test(`${path} opens directly`, async ({ page }) => {
-    await page.goto(path)
+    await goto(page, path)
     await expect(page.locator('header')).toBeVisible()
   })
 }
 
 test('root page starts at mode selection', async ({ page }) => {
-  await page.goto('/')
+  await goto(page, '/')
   await expect(
     page.getByRole('heading', { name: 'モードを選ぶ' }),
   ).toBeVisible()
@@ -29,7 +35,7 @@ test('root page starts at mode selection', async ({ page }) => {
 })
 
 test('about page exposes credits as external links', async ({ page }) => {
-  await page.goto('/about')
+  await goto(page, '/about')
   for (const name of [
     'e-Stat「市区町村名・コード」',
     'ShiKuChoSon',
@@ -52,7 +58,7 @@ test('health API is available in the browser', async ({ request }) => {
 
 test('does not overflow at 320px', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 720 })
-  await page.goto('/')
+  await goto(page, '/')
   const overflows = await page.evaluate(
     () => document.documentElement.scrollWidth > innerWidth,
   )
@@ -63,7 +69,7 @@ test('keeps the answer form visible in a landscape viewport', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 720 })
-  await page.goto('/play')
+  await goto(page, '/play')
   await page.getByLabel('練習').check()
   await page.getByRole('button', { name: '開始する' }).click()
   await expect(page.locator('.countdown-number')).toHaveText('3')
@@ -76,7 +82,7 @@ test('keeps the answer form visible in a landscape viewport', async ({
 })
 
 test('shows a shareable result text', async ({ page }) => {
-  await page.goto('/play')
+  await goto(page, '/play')
   await page.getByLabel('練習').check()
   await page.getByRole('button', { name: '開始する' }).click()
   await page.getByRole('button', { name: '練習を終了' }).click()
@@ -90,7 +96,7 @@ test('shows a shareable result text', async ({ page }) => {
 test('shows the compact result after completing every city', async ({
   page,
 }) => {
-  await page.goto('/play')
+  await goto(page, '/play')
   await page.getByRole('combobox', { name: '都道府県' }).selectOption('31')
   await page.getByLabel('市のみ').check()
   await page.getByLabel('タイピング').check()
@@ -166,7 +172,7 @@ test('shows the compact result after completing every city', async ({
 test('starts a practice game and accepts a correct answer', async ({
   page,
 }) => {
-  await page.goto('/play')
+  await goto(page, '/play')
   await page.getByLabel('練習').check()
   await page.getByRole('button', { name: '開始する' }).click()
   const source = await page

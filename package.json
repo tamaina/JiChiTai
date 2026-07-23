@@ -21,6 +21,7 @@
     "test": "vitest run && vitest run --config vitest.worker.config.mts",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "test:e2e:electron": "env -u ELECTRON_RUN_AS_NODE PLAYWRIGHT_USE_ELECTRON=1 xvfb-run -a playwright test --workers=1",
     "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build"
   },
   "dependencies": {
@@ -40,6 +41,7 @@
     "@vitejs/plugin-vue": "^6.0.0",
     "@vue/compiler-sfc": "^3.5.40",
     "@vue/test-utils": "^2.4.0",
+    "electron": "^43.2.0",
     "eslint": "^9.0.0",
     "eslint-plugin-vue": "^10.0.0",
     "fflate": "^0.8.3",

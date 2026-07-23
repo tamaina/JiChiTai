@@ -1,5 +1,7 @@
 import { defineConfig, devices } from '@playwright/test'
 
+const useElectron = process.env.PLAYWRIGHT_USE_ELECTRON === '1'
+
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
@@ -13,5 +15,10 @@ export default defineConfig({
     url: 'http://127.0.0.1:4173',
     reuseExistingServer: !process.env.CI,
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    {
+      name: useElectron ? 'electron' : 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+    },
+  ],
 })
