@@ -81,6 +81,76 @@ test('keeps the answer form visible in a landscape viewport', async ({
   expect(formIsVisible).toBe(true)
 })
 
+test('keeps the municipality and input visible above a mobile keyboard', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.addInitScript(() => {
+    const viewport = Object.assign(new EventTarget(), {
+      height: 844,
+      width: 390,
+      offsetLeft: 0,
+      offsetTop: 0,
+      pageLeft: 0,
+      pageTop: 0,
+      scale: 1,
+      onresize: null,
+      onscroll: null,
+    })
+    Object.defineProperty(window, 'visualViewport', {
+      configurable: true,
+      value: viewport,
+    })
+  })
+  await goto(page, '/play')
+  await page.getByLabel('練習').check()
+  await page.getByRole('button', { name: '開始する' }).click()
+
+  const question = page.locator('.question-current:has(.answer-input:enabled)')
+  await expect(question).toBeVisible()
+  await page.evaluate(() => {
+    const viewport = window.visualViewport!
+    Object.assign(viewport, { height: 360, offsetTop: 24 })
+    viewport.dispatchEvent(new Event('resize'))
+    viewport.dispatchEvent(new Event('scroll'))
+  })
+
+  const stageBox = await page.locator('.game-start-stage').boundingBox()
+  const nameBox = await question.locator('.municipality-name').boundingBox()
+  const inputBox = await question.locator('.answer-input').boundingBox()
+  expect(stageBox).not.toBeNull()
+  expect(nameBox).not.toBeNull()
+  expect(inputBox).not.toBeNull()
+  expect(stageBox!.y).toBeCloseTo(24, 0)
+  expect(stageBox!.height).toBeCloseTo(360, 0)
+  expect(nameBox!.y).toBeGreaterThanOrEqual(stageBox!.y)
+  expect(inputBox!.y + inputBox!.height).toBeLessThanOrEqual(
+    stageBox!.y + stageBox!.height,
+  )
+
+  const source = await question
+    .locator('.municipality-shape-image')
+    .getAttribute('src')
+  const code = source?.match(/(\d{5})\.svg$/)?.[1]
+  const record = municipalities.find((item) => item.code === code)
+  expect(record).toBeDefined()
+  await question
+    .getByLabel('都道府県 ローマ字入力')
+    .fill(toRomaji(record!.prefecture.kana))
+  await question.getByLabel('都道府県 ローマ字入力').press('Enter')
+
+  const nextQuestion = page.locator(
+    '.question-current:has(.answer-input:enabled)',
+  )
+  await expect(nextQuestion).toBeVisible()
+  await expect
+    .poll(async () => {
+      const nextBox = await nextQuestion.boundingBox()
+      return nextBox ? nextBox.x + nextBox.width : Number.POSITIVE_INFINITY
+    })
+    .toBeLessThanOrEqual(stageBox!.x + stageBox!.width + 0.5)
+})
+
 test('shows a shareable result text', async ({ page }) => {
   await goto(page, '/play')
   await page.getByLabel('練習').check()

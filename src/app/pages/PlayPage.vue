@@ -64,6 +64,8 @@ const historyLocationAbove = ref(false)
 const countdownValue = ref(3)
 const composing = ref(false)
 const virtualKeyboardOpen = ref(false)
+const visualViewportHeight = ref(0)
+const visualViewportOffsetTop = ref(0)
 const preparedQuestionId = ref<string | null>(null)
 let gameStartedAt = 0
 let questionStartedAt = 0
@@ -196,6 +198,10 @@ const answerLabel = computed(() =>
     ? '都道府県 ローマ字入力'
     : '都道府県+市区町村 ローマ字入力',
 )
+const gameViewportStyle = computed(() => ({
+  '--game-viewport-height': `${visualViewportHeight.value || window.innerHeight}px`,
+  '--game-viewport-top': `${visualViewportOffsetTop.value}px`,
+}))
 
 function focusInput() {
   void nextTick(() =>
@@ -203,7 +209,7 @@ function focusInput() {
       .querySelector<HTMLInputElement>(
         '.question:not(.question-slide-leave-active) .answer-input',
       )
-      ?.focus(),
+      ?.focus({ preventScroll: true }),
   )
 }
 
@@ -369,7 +375,12 @@ async function submitAnswer() {
 
 function updateVirtualKeyboardState() {
   const viewport = window.visualViewport
-  if (!viewport) return
+  visualViewportHeight.value = viewport?.height ?? window.innerHeight
+  visualViewportOffsetTop.value = viewport?.offsetTop ?? 0
+  if (!viewport) {
+    virtualKeyboardOpen.value = false
+    return
+  }
   const inputFocused =
     document.activeElement?.classList.contains('answer-input')
   if (!inputFocused) {
@@ -533,7 +544,9 @@ function toggleHistoryLocation(questionId: string, target: EventTarget | null) {
 onMounted(() => {
   maximumVisualViewportHeight =
     window.visualViewport?.height ?? window.innerHeight
+  updateVirtualKeyboardState()
   window.visualViewport?.addEventListener('resize', updateVirtualKeyboardState)
+  window.visualViewport?.addEventListener('scroll', updateVirtualKeyboardState)
 })
 
 onBeforeUnmount(() => {
@@ -542,6 +555,10 @@ onBeforeUnmount(() => {
   window.clearTimeout(countdownTimer)
   window.visualViewport?.removeEventListener(
     'resize',
+    updateVirtualKeyboardState,
+  )
+  window.visualViewport?.removeEventListener(
+    'scroll',
     updateVirtualKeyboardState,
   )
 })
@@ -695,7 +712,11 @@ onBeforeUnmount(() => {
     </p>
   </section>
 
-  <div v-else-if="phase !== 'finished'" class="game-start-stage">
+  <div
+    v-else-if="phase !== 'finished'"
+    class="game-start-stage"
+    :style="gameViewportStyle"
+  >
     <section
       class="game-screen"
       :class="{

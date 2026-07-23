@@ -15,10 +15,25 @@ export default defineConfig({
     url: 'http://127.0.0.1:4173',
     reuseExistingServer: !process.env.CI,
   },
-  projects: [
-    {
-      name: useElectron ? 'electron' : 'chromium',
-      use: { ...devices['Desktop Chrome'] },
-    },
-  ],
+  projects: useElectron
+    ? [
+        {
+          name: 'electron',
+          use: { ...devices['Desktop Chrome'] },
+        },
+      ]
+    : [
+        {
+          name: 'chromium',
+          use: { ...devices['Desktop Chrome'] },
+        },
+        {
+          name: 'android-chrome',
+          use: { ...devices['Pixel 7'] },
+        },
+        {
+          name: 'ios-safari',
+          use: { ...devices['iPhone 14'] },
+        },
+      ],
 })

@@ -936,30 +936,82 @@ td small {
   }
 }
 @media (max-width: 760px) and (orientation: portrait) {
-  .game-screen-keyboard-open {
-    padding-top: var(--space-2);
+  .game-start-stage {
+    position: fixed;
+    z-index: 20;
+    top: var(--game-viewport-top, 0);
+    right: 16px;
+    left: 16px;
+    height: var(--game-viewport-height, 100dvh);
+    background: var(--color-bg);
+    overflow: hidden;
   }
-  .game-screen-keyboard-open .game-status {
+  .game-start-stage .countdown-screen {
+    min-height: 100%;
+  }
+  .game-screen {
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+    padding-top: var(--space-2);
     padding-bottom: var(--space-2);
   }
-  .game-screen-keyboard-open .municipality-name,
-  .game-screen-keyboard-open .question-prompt {
+  .game-screen .game-status {
+    flex: 0 0 auto;
+    padding-bottom: var(--space-2);
+  }
+  .game-screen .question-stage {
+    min-height: 0;
+    flex: 1;
+  }
+  .game-screen .question {
+    display: grid;
+    min-height: 0;
+    grid-template-areas:
+      'heading'
+      'shape'
+      'label'
+      'input'
+      'help'
+      'feedback'
+      'actions';
+    grid-template-rows: auto minmax(48px, 1fr) auto auto auto auto auto;
+  }
+  .game-screen .municipality-name,
+  .game-screen .question-prompt {
+    grid-area: heading;
     margin: var(--space-2) 0 var(--space-1);
     font-size: clamp(20px, 6vw, 26px);
   }
-  .game-screen-keyboard-open .shape-frame {
-    height: min(112px, 22dvh);
+  .game-screen .shape-frame {
+    width: min(100%, 300px);
+    height: auto;
+    min-height: 48px;
+    grid-area: shape;
     margin-bottom: var(--space-2);
   }
-  .game-screen-keyboard-open .answer-label {
+  .game-screen .answer-label {
+    grid-area: label;
     margin-bottom: var(--space-1);
   }
-  .game-screen-keyboard-open .input-help {
+  .game-screen .answer-input {
+    grid-area: input;
+    justify-self: center;
+  }
+  .game-screen .input-help {
+    grid-area: help;
     margin-top: var(--space-1);
   }
-  .game-screen-keyboard-open .feedback {
+  .game-screen .feedback {
+    grid-area: feedback;
     min-height: 20px;
     margin: var(--space-1) 0;
+  }
+  .game-screen .secondary-actions {
+    grid-area: actions;
+  }
+  .game-screen-keyboard-open .shape-frame {
+    max-height: 96px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
