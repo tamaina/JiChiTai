@@ -11,5 +11,7 @@ generated/
 public/generated/*
 !public/generated/emblems/
 !public/generated/emblems/**
+!public/generated/maps/
+!public/generated/maps/**
 worker-configuration.d.ts
 *.log

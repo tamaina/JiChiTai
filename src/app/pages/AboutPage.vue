@@ -97,6 +97,17 @@ import { ExternalLink } from '@lucide/vue'
           </a>
           <span>ライセンス確認済みの市区町村章画像</span>
         </li>
+        <li>
+          <a
+            href="https://www.post.japanpost.jp/service/search/zipcode/download/utf-zip.html"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            日本郵便「郵便番号データ」
+            <ExternalLink :size="15" aria-hidden="true" />
+          </a>
+          <span>自治体別の郵便番号上2桁</span>
+        </li>
       </ul>
     </section>
 

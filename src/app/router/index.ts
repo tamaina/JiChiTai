@@ -9,6 +9,10 @@ export const router = createRouter({
     { path: '/', component: PlayPage },
     { path: '/play', component: PlayPage },
     { path: '/quiz', component: AreaCodeQuizPage },
+    {
+      path: '/explore',
+      component: () => import('../pages/ExplorePage.vue'),
+    },
     { path: '/about', component: AboutPage },
     { path: '/:pathMatch(.*)*', redirect: '/' },
   ],

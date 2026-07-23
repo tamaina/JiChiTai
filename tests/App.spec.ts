@@ -13,6 +13,7 @@ function mountApp() {
       { path: '/', component: PlayPage },
       { path: '/play', component: PlayPage },
       { path: '/quiz', component: EmptyPage },
+      { path: '/explore', component: EmptyPage },
       { path: '/about', component: EmptyPage },
     ],
   })

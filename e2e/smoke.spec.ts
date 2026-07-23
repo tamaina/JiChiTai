@@ -19,7 +19,7 @@ async function expectShareText(textarea: Locator, expectedContent: RegExp) {
   expect(shareUrl.hostname).not.toBe('')
 }
 
-for (const path of ['/', '/play', '/quiz', '/about']) {
+for (const path of ['/', '/play', '/quiz', '/explore', '/about']) {
   test(`${path} opens directly`, async ({ page }) => {
     await goto(page, path)
     await expect(page.locator('header')).toBeVisible()
@@ -72,6 +72,68 @@ test('root page starts at mode selection', async ({ page }) => {
   await expect(page.getByRole('button', { name: '開始する' })).toBeVisible()
 })
 
+test('explores prefectures and municipality details from the map and list', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 800 })
+  await goto(page, '/explore')
+  await expect(
+    page.getByRole('heading', { name: '都道府県一覧' }),
+  ).toBeVisible()
+  await expect(page.locator('.prefecture-list > li')).toHaveCount(47)
+
+  await page.getByRole('button', { name: '鳥取県を選択' }).press('Enter')
+  await expect(page).toHaveURL(/\/explore\?prefecture=31$/)
+  await expect(
+    page.getByRole('heading', { name: '市区町村一覧' }),
+  ).toBeVisible()
+  const mapBox = await page.locator('.explore-map-panel').boundingBox()
+  const dataBox = await page.locator('.explore-data-panel').boundingBox()
+  expect(mapBox).not.toBeNull()
+  expect(dataBox).not.toBeNull()
+  expect(dataBox!.x).toBeGreaterThan(mapBox!.x + mapBox!.width - 1)
+
+  await page.locator('.viewer-list-row').filter({ hasText: '鳥取市' }).click()
+  await expect(page).toHaveURL(/\/explore\?prefecture=31&municipality=31201$/)
+  await expect(
+    page.getByRole('heading', { name: '鳥取市', exact: true }),
+  ).toBeVisible()
+  await expect(page.locator('.detail-data')).toContainText('31201')
+  await expect(page.locator('.detail-data')).toContainText('0857')
+  await expect(page.locator('.detail-data')).toContainText('68')
+  await expect(page.getByRole('button', { name: '鳥取市を選択' })).toHaveClass(
+    /map-region-selected/,
+  )
+
+  await page.getByRole('button', { name: '鳥取県の一覧へ戻る' }).click()
+  await expect(
+    page.getByRole('heading', { name: '市区町村一覧' }),
+  ).toBeVisible()
+  await page.getByRole('button', { name: '全国へ戻る' }).click()
+  await expect(
+    page.getByRole('heading', { name: '都道府県一覧' }),
+  ).toBeVisible()
+  await expect(page.getByText('地図を読み込み中…')).toHaveCount(0)
+})
+
+test('stacks the explorer map and detail on mobile', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await goto(page, '/explore?prefecture=31&municipality=31201')
+  await expect(
+    page.getByRole('heading', { name: '鳥取市', exact: true }),
+  ).toBeVisible()
+  const mapBox = await page.locator('.explore-map-panel').boundingBox()
+  const dataBox = await page.locator('.explore-data-panel').boundingBox()
+  expect(mapBox).not.toBeNull()
+  expect(dataBox).not.toBeNull()
+  expect(dataBox!.y).toBeGreaterThanOrEqual(mapBox!.y + mapBox!.height)
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true)
+})
+
 test('answers a prefecture from a licensed municipality emblem', async ({
   page,
 }) => {
@@ -112,6 +174,7 @@ test('about page exposes credits as external links', async ({ page }) => {
     'Hokkaidle',
     'Wikidata',
     'Wikimedia Commons',
+    '日本郵便「郵便番号データ」',
     'tamaina/JiChiTai',
     'sponsors/tamaina',
   ]) {

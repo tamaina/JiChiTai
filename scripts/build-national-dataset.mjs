@@ -13,7 +13,11 @@ const LAKE_SIMPLIFICATION_TOLERANCE = 0.0005
 const standardRegionsFile = path.resolve('data/e-stat-standard-regions.csv')
 const outputDirectory = path.resolve('public/generated/geometry')
 const prefectureOutputDirectory = path.resolve('public/generated/prefectures')
+const mapOutputDirectory = path.resolve('public/generated/maps')
 const dataFile = path.resolve('src/shared/data/generated-municipalities.ts')
+const nationalMapDataFile = path.resolve(
+  'src/shared/data/generated-national-map.ts',
+)
 
 // Administrative wards are merged into their designated city for the initial game.
 const designatedCities = new Map([
@@ -261,21 +265,19 @@ function perpendicularDistance(point, start, end) {
   return Math.hypot(point[0] - start[0] - t * dx, point[1] - start[1] - t * dy)
 }
 
-function simplify(points, tolerance) {
-  if (points.length <= 4) return points
-  const open = points.slice(0, -1)
-  const keep = new Uint8Array(open.length)
-  keep[0] = keep[open.length - 1] = 1
-  const stack = [[0, open.length - 1]]
+function simplifyOpen(points, tolerance) {
+  const keep = new Uint8Array(points.length)
+  keep[0] = keep[points.length - 1] = 1
+  const stack = [[0, points.length - 1]]
   while (stack.length) {
     const [start, end] = stack.pop()
     let distance = 0
     let selected = 0
     for (let index = start + 1; index < end; index += 1) {
       const candidate = perpendicularDistance(
-        open[index],
-        open[start],
-        open[end],
+        points[index],
+        points[start],
+        points[end],
       )
       if (candidate > distance) [distance, selected] = [candidate, index]
     }
@@ -284,8 +286,48 @@ function simplify(points, tolerance) {
       stack.push([start, selected], [selected, end])
     }
   }
-  const result = open.filter((_, index) => keep[index])
-  return result.length < 3 ? points : [...result, result[0]]
+  return points.filter((_, index) => keep[index])
+}
+
+function simplify(points, tolerance) {
+  if (points.length <= 4) return points
+  const open = points.slice(0, -1)
+  const [startX, startY] = open[0]
+  let oppositeIndex = 1
+  let oppositeDistance = 0
+  for (let index = 1; index < open.length; index += 1) {
+    const distance = Math.hypot(
+      open[index][0] - startX,
+      open[index][1] - startY,
+    )
+    if (distance > oppositeDistance)
+      [oppositeDistance, oppositeIndex] = [distance, index]
+  }
+  const first = simplifyOpen(open.slice(0, oppositeIndex + 1), tolerance)
+  const second = simplifyOpen(
+    [...open.slice(oppositeIndex), open[0]],
+    tolerance,
+  )
+  const result = [...first, ...second.slice(1)]
+  if (new Set(result.slice(0, -1).map((point) => point.join(','))).size >= 3)
+    return result
+
+  let thirdIndex = 1
+  let thirdDistance = 0
+  for (let index = 1; index < open.length; index += 1) {
+    if (index === oppositeIndex) continue
+    const distance = perpendicularDistance(
+      open[index],
+      open[0],
+      open[oppositeIndex],
+    )
+    if (distance > thirdDistance)
+      [thirdDistance, thirdIndex] = [distance, index]
+  }
+  const triangle = [0, oppositeIndex, thirdIndex]
+    .sort((firstIndex, secondIndex) => firstIndex - secondIndex)
+    .map((index) => open[index])
+  return [...triangle, triangle[0]]
 }
 
 function toSvg(geometry, label, sharedLongitudeScale) {
@@ -389,20 +431,43 @@ function createSharedProjection(
     offsetX + (longitude * longitudeScale - minX) * scale,
     offsetY + (maxY - latitude) * scale,
   ]
-  const tolerance = Math.max(width, height) * 0.0015
-  const pathFor = (geometry) =>
+  const maximumSpan = Math.max(width, height)
+  const pathFor = (
+    geometry,
+    simplificationRatio = 0.0015,
+    { maxPointsPerRing = Infinity, minimumBoundsArea = 0 } = {},
+  ) =>
     rings(geometry)
       .flat()
       .map((ring) => {
-        const reduced = simplify(
+        let reduced = simplify(
           ring.map(([x, y]) => [x * longitudeScale, y]),
-          tolerance,
-        ).map(([x, y]) => [
+          maximumSpan * simplificationRatio,
+        )
+        if (reduced.length - 1 > maxPointsPerRing) {
+          const open = reduced.slice(0, -1)
+          const sampled = Array.from(
+            { length: maxPointsPerRing },
+            (_, index) =>
+              open[Math.floor((index * open.length) / maxPointsPerRing)],
+          )
+          reduced = [...sampled, sampled[0]]
+        }
+        const mapped = reduced.map(([x, y]) => [
           offsetX + (x - minX) * scale,
           offsetY + (maxY - y) * scale,
         ])
-        return `M${reduced.map(([x, y]) => `${x.toFixed(2)} ${y.toFixed(2)}`).join('L')}Z`
+        if (minimumBoundsArea) {
+          const xs = mapped.map(([x]) => x)
+          const ys = mapped.map(([, y]) => y)
+          const boundsArea =
+            (Math.max(...xs) - Math.min(...xs)) *
+            (Math.max(...ys) - Math.min(...ys))
+          if (boundsArea < minimumBoundsArea) return ''
+        }
+        return `M${mapped.map(([x, y]) => `${x.toFixed(2)} ${y.toFixed(2)}`).join('L')}Z`
       })
+      .filter(Boolean)
       .join('')
   const boundsFor = (geometry) => {
     const points = rings(geometry).flat(2).map(mapPoint)
@@ -499,8 +564,10 @@ const prefectureRecordByCode = new Map()
 const prefectureItems = new Map()
 await rm(outputDirectory, { recursive: true, force: true })
 await rm(prefectureOutputDirectory, { recursive: true, force: true })
+await rm(mapOutputDirectory, { recursive: true, force: true })
 await mkdir(outputDirectory, { recursive: true })
 await mkdir(prefectureOutputDirectory, { recursive: true })
+await mkdir(mapOutputDirectory, { recursive: true })
 for (const item of [...grouped.values()].sort((a, b) =>
   a.code.localeCompare(b.code),
 )) {
@@ -577,6 +644,56 @@ function belongsToMainArea(prefectureCode, municipalityCode, geometry) {
   return true
 }
 
+const allMapItems = [...prefectureItems.values()].flat()
+const nationalBounds = allMapItems
+  .map(({ geometry }) => geometryBounds(geometry))
+  .reduce(
+    (result, bounds) => ({
+      minLongitude: Math.min(result.minLongitude, bounds.minLongitude),
+      maxLongitude: Math.max(result.maxLongitude, bounds.maxLongitude),
+      minLatitude: Math.min(result.minLatitude, bounds.minLatitude),
+      maxLatitude: Math.max(result.maxLatitude, bounds.maxLatitude),
+    }),
+    {
+      minLongitude: Infinity,
+      maxLongitude: -Infinity,
+      minLatitude: Infinity,
+      maxLatitude: -Infinity,
+    },
+  )
+const nationalBoundsGeometry = {
+  type: 'Polygon',
+  coordinates: [
+    [
+      [nationalBounds.minLongitude, nationalBounds.minLatitude],
+      [nationalBounds.maxLongitude, nationalBounds.minLatitude],
+      [nationalBounds.maxLongitude, nationalBounds.maxLatitude],
+      [nationalBounds.minLongitude, nationalBounds.maxLatitude],
+      [nationalBounds.minLongitude, nationalBounds.minLatitude],
+    ],
+  ],
+}
+const nationalProjection = createSharedProjection([nationalBoundsGeometry], {
+  x: 3,
+  y: 3,
+  width: 94,
+  height: 94,
+})
+const nationalPrefecturePaths = [...prefectureItems]
+  .map(([code, items]) => ({
+    code,
+    path: items
+      .map(({ geometry }) =>
+        nationalProjection.pathFor(geometry, 0.004, {
+          maxPointsPerRing: 18,
+          minimumBoundsArea: 0.002,
+        }),
+      )
+      .join(''),
+  }))
+  .sort((first, second) => first.code.localeCompare(second.code))
+const municipalityPathsByPrefecture = {}
+
 for (const [prefectureCode, items] of prefectureItems) {
   const usesInset = insetPrefectureCodes.has(prefectureCode)
   const fullProjection = createSharedProjection(
@@ -603,6 +720,23 @@ for (const [prefectureCode, items] of prefectureItems) {
   const insetDecoration = usesInset
     ? '<path fill="none" stroke="#56615e" stroke-width="0.55" d="M69 8V92"/>'
     : ''
+  municipalityPathsByPrefecture[prefectureCode] = items
+    .map(({ item, geometry }) => {
+      const inMainArea = belongsToMainArea(prefectureCode, item.code, geometry)
+      const mainPath =
+        !usesInset || inMainArea
+          ? mainlandProjection.pathFor(geometry, 0.006, {
+              maxPointsPerRing: 60,
+            })
+          : ''
+      const insetPath = usesInset
+        ? fullProjection.pathFor(geometry, 0.006, {
+            maxPointsPerRing: 60,
+          })
+        : ''
+      return { code: item.code, path: `${mainPath}${insetPath}` }
+    })
+    .sort((first, second) => first.code.localeCompare(second.code))
   await writeFile(
     path.join(prefectureOutputDirectory, `${prefectureCode}.svg`),
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path fill="#34413e" fill-rule="evenodd" d="${mainPath}"/><path fill="#34413e" fill-rule="evenodd" d="${fullPath}"/>${insetDecoration}</svg>\n`,
@@ -635,6 +769,22 @@ const prefectureRecords = [...prefectureRecordByCode.values()].sort((a, b) =>
 )
 const generated = `// Generated by scripts/build-national-dataset.mjs. Do not edit.\nimport type { GeneratedMunicipalityRecord, PrefectureRecord } from './municipalities'\nexport const generatedPrefectures: PrefectureRecord[] = ${JSON.stringify(prefectureRecords)}\nexport const generatedMunicipalities: GeneratedMunicipalityRecord[] = ${JSON.stringify(records)}\n`
 await writeFile(dataFile, generated)
+const generatedNationalMap = `// Generated by scripts/build-national-dataset.mjs. Do not edit.
+export interface GeneratedMapPath {
+  code: string
+  path: string
+}
+
+export const nationalPrefecturePaths: GeneratedMapPath[] = ${JSON.stringify(nationalPrefecturePaths)}
+`
+await writeFile(nationalMapDataFile, generatedNationalMap)
+for (const [prefectureCode, mapPaths] of Object.entries(
+  municipalityPathsByPrefecture,
+))
+  await writeFile(
+    path.join(mapOutputDirectory, `${prefectureCode}.json`),
+    `${JSON.stringify(mapPaths)}\n`,
+  )
 await mkdir(path.resolve('generated'), { recursive: true })
 await writeFile(
   path.resolve('generated/national-dataset-metadata.json'),

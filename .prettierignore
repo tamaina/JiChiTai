@@ -5,3 +5,5 @@ test-results
 worker-configuration.d.ts
 pnpm-lock.yaml
 INSTRUCTIONS.md
+public/generated/emblems/
+public/generated/maps/
