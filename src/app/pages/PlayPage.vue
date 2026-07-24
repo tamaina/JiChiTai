@@ -825,13 +825,41 @@ onBeforeUnmount(() => {
               </span>
             </small>
           </p>
-          <p v-else class="question-prompt">
-            {{
-              gameType === 'municipality-from-emblem'
-                ? 'この市区町村章の自治体は？'
-                : 'この形の自治体は？'
-            }}
-          </p>
+          <div v-else class="question-heading">
+            <p class="question-prompt">
+              {{
+                gameType === 'municipality-from-emblem'
+                  ? 'この市区町村章の自治体は？'
+                  : 'この形の自治体は？'
+              }}
+            </p>
+            <p
+              v-if="
+                gameType === 'municipality-from-emblem' &&
+                recordForQuestion(question)?.emblem
+              "
+              class="emblem-attribution"
+            >
+              画像:
+              <a
+                :href="recordForQuestion(question)?.emblem?.sourceUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+                >{{ recordForQuestion(question)?.emblem?.author }}</a
+              >
+              /
+              <a
+                v-if="recordForQuestion(question)?.emblem?.licenseUrl"
+                :href="recordForQuestion(question)?.emblem?.licenseUrl ?? ''"
+                target="_blank"
+                rel="noopener noreferrer"
+                >{{ recordForQuestion(question)?.emblem?.licenseName }}</a
+              >
+              <span v-else>{{
+                recordForQuestion(question)?.emblem?.licenseName
+              }}</span>
+            </p>
+          </div>
           <div class="shape-frame">
             <div class="shape-slide-item">
               <template v-if="gameType === 'municipality-from-emblem'">
@@ -880,34 +908,6 @@ onBeforeUnmount(() => {
               </template>
             </div>
           </div>
-          <p
-            v-if="
-              gameType === 'municipality-from-emblem' &&
-              phase === 'revealed' &&
-              question.questionId === currentQuestion?.questionId &&
-              recordForQuestion(question)?.emblem
-            "
-            class="emblem-attribution"
-          >
-            画像:
-            <a
-              :href="recordForQuestion(question)?.emblem?.sourceUrl"
-              target="_blank"
-              rel="noopener noreferrer"
-              >{{ recordForQuestion(question)?.emblem?.author }}</a
-            >
-            /
-            <a
-              v-if="recordForQuestion(question)?.emblem?.licenseUrl"
-              :href="recordForQuestion(question)?.emblem?.licenseUrl ?? ''"
-              target="_blank"
-              rel="noopener noreferrer"
-              >{{ recordForQuestion(question)?.emblem?.licenseName }}</a
-            >
-            <span v-else>{{
-              recordForQuestion(question)?.emblem?.licenseName
-            }}</span>
-          </p>
           <form class="answer-form" @submit.prevent="submitAnswer">
             <label class="answer-label" :for="`answer-${question.questionId}`">
               {{ answerLabel }}

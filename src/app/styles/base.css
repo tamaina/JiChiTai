@@ -598,6 +598,12 @@ button:disabled {
   margin: var(--space-6) 0 var(--space-2);
   color: var(--color-muted);
 }
+.question-heading {
+  margin: var(--space-6) 0 var(--space-2);
+}
+.question-heading .question-prompt {
+  margin: 0;
+}
 .shape-frame {
   width: min(100%, 420px);
   height: min(380px, 50vh);
@@ -643,14 +649,7 @@ button:disabled {
   object-fit: contain;
 }
 .emblem-attribution {
-  z-index: 2;
-  grid-area: shape;
-  align-self: end;
-  justify-self: center;
-  margin: calc(-1 * var(--space-4)) auto var(--space-3);
-  padding: 2px var(--space-1);
-  border-radius: 4px;
-  background: color-mix(in srgb, var(--color-bg) 90%, transparent);
+  margin: var(--space-1) auto 0;
   color: var(--color-muted);
   font-size: 12px;
 }
@@ -1247,7 +1246,7 @@ td small {
     column-gap: clamp(24px, 5vw, 72px);
   }
   .municipality-name,
-  .question-prompt {
+  .question-heading {
     display: flex;
     min-width: 0;
     height: 100%;
@@ -1358,7 +1357,7 @@ td small {
     grid-template-rows: auto minmax(48px, 1fr) auto auto auto auto auto;
   }
   .game-screen .municipality-name,
-  .game-screen .question-prompt {
+  .game-screen .question-heading {
     grid-area: heading;
     margin: var(--space-2) 0 var(--space-1);
     font-size: clamp(20px, 6vw, 26px);
