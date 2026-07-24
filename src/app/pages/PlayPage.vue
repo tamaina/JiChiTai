@@ -1037,18 +1037,18 @@ onBeforeUnmount(() => {
       <table>
         <colgroup>
           <col class="history-shape-column" />
-          <col />
-          <col />
-          <col />
-          <col />
+          <col class="history-question-column" />
+          <col class="history-answer-column" />
+          <col class="history-result-column" />
+          <col class="history-time-column" />
         </colgroup>
         <thead>
           <tr>
             <th class="history-shape-cell" aria-label="形または市区町村章"></th>
             <th>問題</th>
             <th>入力</th>
-            <th>結果</th>
-            <th>時間</th>
+            <th class="history-result-cell">結果</th>
+            <th class="history-time-cell">時間</th>
           </tr>
         </thead>
         <tbody>
@@ -1165,7 +1165,9 @@ onBeforeUnmount(() => {
                 }}
               </span>
             </td>
-            <td>{{ (item.elapsedMs / 1000).toFixed(1) }}秒</td>
+            <td class="history-time-cell">
+              {{ (item.elapsedMs / 1000).toFixed(1) }}秒
+            </td>
           </tr>
         </tbody>
       </table>

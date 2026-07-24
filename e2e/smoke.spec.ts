@@ -378,11 +378,12 @@ test('answers a municipality from a licensed municipality emblem', async ({
   const record = municipalities.find((item) => item.code === code)
   expect(record?.emblem).toBeTruthy()
 
-  await question
-    .getByLabel('都道府県+市区町村 ローマ字入力')
-    .fill(toRomaji(`${record!.prefecture.kana}${record!.kana}`))
-  await question.getByLabel('都道府県+市区町村 ローマ字入力').press('Enter')
-  await question.getByRole('button', { name: '練習を終了' }).click()
+  const answerInput = question.getByLabel('都道府県+市区町村 ローマ字入力')
+  const answerInputId = await answerInput.getAttribute('id')
+  await answerInput.fill(toRomaji(`${record!.prefecture.kana}${record!.kana}`))
+  await answerInput.press('Enter')
+  await expect(page.locator(`#${answerInputId}`)).toBeHidden()
+  await page.getByRole('button', { name: '練習を終了' }).click()
   const historyEmblem = page.locator('.history-emblem').first()
   const historyShapeCell = page.locator('td.history-shape-cell').first()
   await expect(historyEmblem).toBeVisible()
@@ -399,6 +400,35 @@ test('answers a municipality from a licensed municipality emblem', async ({
         (historyShapeCellBox!.x + historyShapeCellBox!.width / 2),
     ),
   ).toBeLessThanOrEqual(2)
+
+  const historyQuestionCell = page.locator('td.history-question-cell').first()
+  const historyAnswerCell = page.locator('td.history-answer-cell').first()
+  const historyResultCell = page.locator('td.history-result-cell').first()
+  const historyTimeCell = page.locator('td.history-time-cell').first()
+  const [
+    historyQuestionCellBox,
+    historyAnswerCellBox,
+    historyResultCellBox,
+    historyTimeCellBox,
+  ] = await Promise.all([
+    historyQuestionCell.boundingBox(),
+    historyAnswerCell.boundingBox(),
+    historyResultCell.boundingBox(),
+    historyTimeCell.boundingBox(),
+  ])
+  expect(historyQuestionCellBox).not.toBeNull()
+  expect(historyAnswerCellBox).not.toBeNull()
+  expect(historyResultCellBox).not.toBeNull()
+  expect(historyTimeCellBox).not.toBeNull()
+  expect(historyQuestionCellBox!.width).toBeGreaterThan(
+    historyAnswerCellBox!.width,
+  )
+  expect(historyAnswerCellBox!.width).toBeGreaterThan(
+    historyResultCellBox!.width,
+  )
+  expect(historyAnswerCellBox!.width).toBeGreaterThan(historyTimeCellBox!.width)
+  await expect(historyResultCell).toHaveCSS('white-space', 'nowrap')
+  await expect(historyTimeCell).toHaveCSS('white-space', 'nowrap')
 })
 
 test('about page exposes credits as external links', async ({ page }) => {
