@@ -44,7 +44,7 @@ function filteredMunicipalities(
         (municipalityFilter === 'population-top-1000' &&
           populationTop1000MunicipalityCodes.has(record.code))) &&
       (!prefectureCode || record.prefectureCode === prefectureCode) &&
-      (gameType !== 'prefecture-from-emblem' || Boolean(record.emblem)),
+      (gameType !== 'municipality-from-emblem' || Boolean(record.emblem)),
   )
 }
 
@@ -64,11 +64,11 @@ function questionBatch(
     municipalityCode: record.code,
     prefectureCode: record.prefectureCode,
     ...(gameType === 'municipality-from-shape' ||
-    gameType === 'prefecture-from-emblem'
+    gameType === 'municipality-from-emblem'
       ? {}
       : { municipalityDisplayName: record.name }),
     shapeUrl: municipalityShapeUrl(record.code),
-    ...(gameType === 'prefecture-from-emblem'
+    ...(gameType === 'municipality-from-emblem'
       ? { emblemUrl: record.emblem?.imageUrl }
       : {}),
   }))

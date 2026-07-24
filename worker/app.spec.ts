@@ -84,7 +84,7 @@ describe('Worker API', () => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        gameType: 'prefecture-from-emblem',
+        gameType: 'municipality-from-emblem',
         ruleMode: 'practice',
       }),
     })
@@ -174,17 +174,27 @@ describe('Worker API', () => {
     expect(response.status).toBe(400)
   })
 
-  it('rejects emblem prefecture-answer mode with a prefecture filter', async () => {
+  it('filters emblem municipality-answer mode by prefecture', async () => {
     const response = await createApp().request('/api/game-sessions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        gameType: 'prefecture-from-emblem',
+        gameType: 'municipality-from-emblem',
         ruleMode: 'practice',
         prefectureCode: '10',
       }),
     })
-    expect(response.status).toBe(400)
+    const body = (await response.json()) as {
+      questions: Array<{ prefectureCode: string; emblemUrl?: string }>
+    }
+    expect(response.status).toBe(200)
+    expect(body.questions.length).toBeGreaterThan(0)
+    expect(
+      body.questions.every(
+        (question) =>
+          question.prefectureCode === '10' && Boolean(question.emblemUrl),
+      ),
+    ).toBe(true)
   })
 
   it('replenishes without repeating the initial questions', async () => {

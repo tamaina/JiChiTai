@@ -116,7 +116,19 @@ describe('roman input', () => {
     expect(canonicalAnswer(fujioka, 'prefecture-from-municipality')).toBe(
       'gunmakenn',
     )
-    expect(canonicalAnswer(fujioka, 'prefecture-from-emblem')).toBe('gunmakenn')
+    expect(canonicalAnswer(fujioka, 'municipality-from-emblem')).toBe(
+      'gunmakenfujiokashi',
+    )
+    expect(
+      isCorrectAnswer(
+        fujioka,
+        'municipality-from-emblem',
+        'gunmakennfujiokashi',
+      ),
+    ).toBe(true)
+    expect(
+      isValidPlaceAnswer('municipality-from-emblem', 'gunmakennfujiokashi'),
+    ).toBe(true)
   })
 
   it('distinguishes valid wrong places from arbitrary text', () => {

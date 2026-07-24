@@ -134,7 +134,7 @@ const accuracy = computed(() => {
 })
 const gameTypeLabel = computed(() => {
   if (gameType.value === 'prefecture-from-municipality') return '都道府県当て'
-  if (gameType.value === 'prefecture-from-emblem') return '市区町村章当て'
+  if (gameType.value === 'municipality-from-emblem') return '市区町村章当て'
   if (gameType.value === 'municipality-from-shape') return '市区町村当て'
   return 'タイピング'
 })
@@ -649,8 +649,7 @@ onBeforeUnmount(() => {
           <input
             v-model="gameType"
             type="radio"
-            value="prefecture-from-emblem"
-            :disabled="Boolean(prefectureCode)"
+            value="municipality-from-emblem"
             aria-label="市区町村章当て"
           />
           <Shield class="choice-icon" :size="24" />
@@ -794,7 +793,7 @@ onBeforeUnmount(() => {
           <p
             v-if="
               gameType !== 'municipality-from-shape' &&
-              gameType !== 'prefecture-from-emblem'
+              gameType !== 'municipality-from-emblem'
             "
             class="municipality-name"
           >
@@ -828,14 +827,14 @@ onBeforeUnmount(() => {
           </p>
           <p v-else class="question-prompt">
             {{
-              gameType === 'prefecture-from-emblem'
-                ? 'この市区町村章の都道府県は？'
+              gameType === 'municipality-from-emblem'
+                ? 'この市区町村章の自治体は？'
                 : 'この形の自治体は？'
             }}
           </p>
           <div class="shape-frame">
             <div class="shape-slide-item">
-              <template v-if="gameType === 'prefecture-from-emblem'">
+              <template v-if="gameType === 'municipality-from-emblem'">
                 <img
                   class="municipality-emblem-image"
                   :src="question.emblemUrl"
@@ -883,7 +882,7 @@ onBeforeUnmount(() => {
           </div>
           <p
             v-if="
-              gameType === 'prefecture-from-emblem' &&
+              gameType === 'municipality-from-emblem' &&
               phase === 'revealed' &&
               question.questionId === currentQuestion?.questionId &&
               recordForQuestion(question)?.emblem

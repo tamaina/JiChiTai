@@ -344,7 +344,7 @@ test('keeps municipality postal data compact in the viewer list', async ({
   ).toBe(true)
 })
 
-test('answers a prefecture from a licensed municipality emblem', async ({
+test('answers a municipality from a licensed municipality emblem', async ({
   page,
 }) => {
   await goto(page, '/play')
@@ -355,6 +355,7 @@ test('answers a prefecture from a licensed municipality emblem', async ({
   const question = page.locator('.question-current:has(.answer-input:enabled)')
   const emblem = question.getByAltText('市区町村章')
   await expect(emblem).toBeVisible()
+  await expect(question.getByText('この市区町村章の自治体は？')).toBeVisible()
   await expect
     .poll(() =>
       emblem.evaluate((image: HTMLImageElement) => image.naturalWidth),
@@ -367,9 +368,9 @@ test('answers a prefecture from a licensed municipality emblem', async ({
   expect(record?.emblem).toBeTruthy()
 
   await question
-    .getByLabel('都道府県 ローマ字入力')
-    .fill(toRomaji(record!.prefecture.kana))
-  await question.getByLabel('都道府県 ローマ字入力').press('Enter')
+    .getByLabel('都道府県+市区町村 ローマ字入力')
+    .fill(toRomaji(`${record!.prefecture.kana}${record!.kana}`))
+  await question.getByLabel('都道府県+市区町村 ローマ字入力').press('Enter')
   await expect(page.locator('.emblem-attribution')).toContainText('画像:')
   await question.getByRole('button', { name: '練習を終了' }).click()
   await expect(page.locator('.history-emblem')).toBeVisible()

@@ -1,6 +1,6 @@
 export type GameType =
   | 'prefecture-from-municipality'
-  | 'prefecture-from-emblem'
+  | 'municipality-from-emblem'
   | 'municipality-from-shape'
   | 'municipality-typing'
 export type RuleMode = 'timed' | 'practice'
