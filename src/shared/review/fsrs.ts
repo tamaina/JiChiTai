@@ -30,6 +30,11 @@ export const reviewModes = [
     name: '自治体名 → 市外局番',
     description: '自治体から代表の市外局番を思い出す',
   },
+  {
+    id: 'municipality-from-area-code',
+    name: '市外局番 → 自治体',
+    description: '市外局番を使う自治体のひとつを思い出す',
+  },
 ] as const
 
 export type ReviewMode = (typeof reviewModes)[number]['id']
@@ -80,9 +85,28 @@ export function isEligibleForReview(
   mode: ReviewMode,
 ) {
   if (mode === 'prefecture-from-emblem') return record.emblem !== null
-  if (mode === 'area-code-from-municipality')
+  if (
+    mode === 'area-code-from-municipality' ||
+    mode === 'municipality-from-area-code'
+  )
     return record.primaryAreaCode !== null
   return true
+}
+
+export function eligibleReviewMunicipalities(
+  records: MunicipalityRecord[],
+  mode: ReviewMode,
+) {
+  const eligible = records.filter((record) => isEligibleForReview(record, mode))
+  if (mode !== 'municipality-from-area-code') return eligible
+
+  const seenAreaCodes = new Set<string>()
+  return eligible.filter((record) => {
+    const areaCode = record.primaryAreaCode
+    if (!areaCode || seenAreaCodes.has(areaCode)) return false
+    seenAreaCodes.add(areaCode)
+    return true
+  })
 }
 
 export function serializeCard(card: Card): SerializedFsrsCard {
@@ -150,24 +174,35 @@ export function selectReviewMunicipalities(
   storedCards: StoredReviewCard[],
   mode: ReviewMode,
   now = new Date(),
-  limit = 20,
+  limit: number | null = 20,
+  random = Math.random,
 ) {
   const storedById = new Map(storedCards.map((card) => [card.id, card]))
-  const eligible = records.filter((record) => isEligibleForReview(record, mode))
-  const due = eligible
-    .filter((record) => {
+  const eligible = eligibleReviewMunicipalities(records, mode)
+  const due = shuffled(
+    eligible.filter((record) => {
       const stored = storedById.get(reviewCardId(mode, record.code))
       return stored && new Date(stored.card.due) <= now
-    })
-    .sort((left, right) => {
-      const leftDue = storedById.get(reviewCardId(mode, left.code))?.card.due
-      const rightDue = storedById.get(reviewCardId(mode, right.code))?.card.due
-      return (leftDue ?? '').localeCompare(rightDue ?? '')
-    })
-  const unseen = eligible.filter(
-    (record) => !storedById.has(reviewCardId(mode, record.code)),
+    }),
+    random,
   )
-  return [...due, ...unseen].slice(0, limit)
+  const unseen = shuffled(
+    eligible.filter(
+      (record) => !storedById.has(reviewCardId(mode, record.code)),
+    ),
+    random,
+  )
+  const selected = [...due, ...unseen]
+  return limit === null ? selected : selected.slice(0, limit)
+}
+
+export function shuffled<T>(items: T[], random = Math.random) {
+  const result = [...items]
+  for (let index = result.length - 1; index > 0; index -= 1) {
+    const target = Math.floor(random() * (index + 1))
+    ;[result[index], result[target]] = [result[target], result[index]]
+  }
+  return result
 }
 
 export function reviewModeStats(
@@ -177,9 +212,7 @@ export function reviewModeStats(
   now = new Date(),
 ) {
   const eligibleCodes = new Set(
-    records
-      .filter((record) => isEligibleForReview(record, mode))
-      .map((record) => record.code),
+    eligibleReviewMunicipalities(records, mode).map((record) => record.code),
   )
   const relevant = storedCards.filter(
     (card) => card.mode === mode && eligibleCodes.has(card.municipalityCode),

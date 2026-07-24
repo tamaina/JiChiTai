@@ -36,9 +36,11 @@ test('reviews independently and replaces history only after confirmation', async
   await expect(page.locator('.review-stats')).toContainText('1747')
 
   await page.getByRole('button', { name: '最大20枚を学習する' }).click()
-  await expect(page.locator('.review-card-front h1')).toHaveText(
-    municipalities[0].name,
-  )
+  await expect(page.locator('.review-progress')).toContainText('1 / 20')
+  const frontName = (
+    await page.locator('.review-card-front h1').textContent()
+  )?.trim()
+  expect(municipalities.some((record) => record.name === frontName)).toBe(true)
   await page.getByRole('button', { name: '答えを見る' }).click()
   await expect(page.getByRole('button', { name: /^忘れた/ })).toBeVisible()
   await expect(page.getByRole('button', { name: /^難しい/ })).toBeVisible()
@@ -55,6 +57,19 @@ test('reviews independently and replaces history only after confirmation', async
 
   await page.getByLabel('輪郭 → 自治体').check()
   await expect(page.locator('.review-stats')).toContainText('0学習済み')
+  await page.getByLabel('詰め込みモード').check()
+  await page.getByRole('button', { name: '対象カードをすべて学習する' }).click()
+  await expect(page.locator('.review-progress')).toContainText('1 / 1747')
+  await page.getByRole('button', { name: '学習を終了' }).click()
+
+  await page.getByLabel('市外局番 → 自治体').check()
+  await page.getByLabel('通常モード').check()
+  await page.getByRole('button', { name: '最大20枚を学習する' }).click()
+  await expect(page.locator('.review-card-front h1')).toHaveText(/^\d{2,5}$/)
+  await page.getByRole('button', { name: '答えを見る' }).click()
+  await expect(page.locator('.review-answer h2')).not.toBeEmpty()
+  await page.getByRole('button', { name: '学習を終了' }).click()
+
   await page.getByLabel('自治体名 → 都道府県').check()
 
   const downloadPromise = page.waitForEvent('download')

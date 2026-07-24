@@ -25,10 +25,12 @@ import {
 } from '../storage/review-storage'
 
 type Phase = 'select' | 'reviewing' | 'finished'
+type SessionSize = 'twenty' | 'cram'
 
 const SESSION_SIZE = 20
 const phase = ref<Phase>('select')
 const selectedMode = ref<ReviewMode>('prefecture-from-municipality')
+const sessionSize = ref<SessionSize>('twenty')
 const storedCards = ref<StoredReviewCard[]>([])
 const queue = ref<typeof municipalities>([])
 const currentIndex = ref(0)
@@ -46,6 +48,12 @@ const currentStoredCard = computed(() => {
         (card) => card.id === reviewCardId(selectedMode.value, record.code),
       )
     : undefined
+})
+const currentAreaCodeMunicipalities = computed(() => {
+  const areaCode = currentRecord.value?.primaryAreaCode
+  if (selectedMode.value !== 'municipality-from-area-code' || !areaCode)
+    return []
+  return municipalities.filter((record) => record.areaCodes.includes(areaCode))
 })
 const stats = computed(() =>
   reviewModeStats(municipalities, storedCards.value, selectedMode.value),
@@ -70,7 +78,7 @@ function startReview() {
     storedCards.value,
     selectedMode.value,
     new Date(),
-    SESSION_SIZE,
+    sessionSize.value === 'cram' ? null : SESSION_SIZE,
   )
   currentIndex.value = 0
   answerVisible.value = false
@@ -195,6 +203,26 @@ async function importHistory(event: Event) {
         </div>
       </fieldset>
 
+      <fieldset class="selection-group">
+        <legend>出題数</legend>
+        <div class="rule-card-grid">
+          <label class="choice-card choice-card-compact">
+            <input v-model="sessionSize" type="radio" value="twenty" />
+            <span class="choice-copy">
+              <strong>通常モード</strong>
+              <small>シャッフルしたカードから最大20枚</small>
+            </span>
+          </label>
+          <label class="choice-card choice-card-compact">
+            <input v-model="sessionSize" type="radio" value="cram" />
+            <span class="choice-copy">
+              <strong>詰め込みモード</strong>
+              <small>復習期限と未学習の全カードを出題</small>
+            </span>
+          </label>
+        </div>
+      </fieldset>
+
       <div class="review-stats" aria-live="polite">
         <div>
           <strong>{{ stats.due }}</strong
@@ -216,7 +244,13 @@ async function importHistory(event: Event) {
         :disabled="loading"
         @click="startReview"
       >
-        {{ loading ? '履歴を読み込み中…' : '最大20枚を学習する' }}
+        {{
+          loading
+            ? '履歴を読み込み中…'
+            : sessionSize === 'cram'
+              ? '対象カードをすべて学習する'
+              : '最大20枚を学習する'
+        }}
       </button>
 
       <section class="review-data-panel" aria-labelledby="review-data-heading">
@@ -276,6 +310,11 @@ async function importHistory(event: Event) {
             <template v-if="selectedMode === 'prefecture-from-municipality'">
               {{ currentRecord.name }}
             </template>
+            <template
+              v-else-if="selectedMode === 'municipality-from-area-code'"
+            >
+              {{ currentRecord.primaryAreaCode }}
+            </template>
             <template v-else>
               {{ currentRecord.prefecture.name }}{{ currentRecord.name }}
             </template>
@@ -302,10 +341,21 @@ async function importHistory(event: Event) {
               （ほか {{ currentRecord.areaCodes.slice(1).join('、') }}）
             </small>
           </h2>
+          <template v-else-if="selectedMode === 'municipality-from-area-code'">
+            <h2>該当する自治体</h2>
+            <ul class="review-area-code-municipalities">
+              <li
+                v-for="record in currentAreaCodeMunicipalities"
+                :key="record.code"
+              >
+                {{ record.prefecture.name }}{{ record.name }}
+              </li>
+            </ul>
+          </template>
           <h2 v-else>
             {{ currentRecord.prefecture.name }}{{ currentRecord.name }}
           </h2>
-          <p>
+          <p v-if="selectedMode !== 'municipality-from-area-code'">
             {{ currentRecord.kana }}
             <template v-if="currentRecord.postalCodePrefixes.length">
               ／ 郵便番号上2桁

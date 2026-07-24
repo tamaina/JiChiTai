@@ -1064,6 +1064,18 @@ td small {
   margin: var(--space-2) 0;
   color: var(--color-muted);
 }
+.review-area-code-municipalities {
+  display: flex;
+  max-height: 160px;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  justify-content: center;
+  margin: var(--space-3) 0;
+  padding: 0;
+  overflow-y: auto;
+  color: var(--color-muted);
+  list-style: none;
+}
 .review-rating {
   display: grid;
   grid-template-columns: repeat(4, 1fr);

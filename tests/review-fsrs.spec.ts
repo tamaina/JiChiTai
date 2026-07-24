@@ -76,9 +76,71 @@ describe('FSRS review scheduling', () => {
       'prefecture-from-municipality',
       now,
       3,
+      () => 0,
     )
     expect(selected[0].code).toBe(second.code)
     expect(selected.map((record) => record.code)).not.toContain(first.code)
+  })
+
+  it('shuffles unseen cards before limiting a normal session', () => {
+    const selected = selectReviewMunicipalities(
+      municipalities,
+      [],
+      'prefecture-from-municipality',
+      now,
+      20,
+      () => 0,
+    )
+    expect(selected).toHaveLength(20)
+    expect(selected.map((record) => record.code)).not.toEqual(
+      municipalities.slice(0, 20).map((record) => record.code),
+    )
+  })
+
+  it('returns every eligible card when the session has no limit', () => {
+    const selected = selectReviewMunicipalities(
+      municipalities,
+      [],
+      'prefecture-from-municipality',
+      now,
+      null,
+      () => 0,
+    )
+    expect(selected).toHaveLength(1747)
+    expect(new Set(selected.map((record) => record.code)).size).toBe(1747)
+  })
+
+  it('supports area-code-to-municipality cards independently', () => {
+    const eligibleCount = new Set(
+      municipalities
+        .map((record) => record.primaryAreaCode)
+        .filter((areaCode) => areaCode !== null),
+    ).size
+    const selected = selectReviewMunicipalities(
+      municipalities,
+      [],
+      'municipality-from-area-code',
+      now,
+      null,
+      () => 0,
+    )
+    const record = selected[0]
+    const stored = scheduleReview(
+      undefined,
+      'municipality-from-area-code',
+      record.code,
+      Rating.Good,
+      now,
+    )
+
+    expect(selected).toHaveLength(eligibleCount)
+    expect(new Set(selected.map((record) => record.primaryAreaCode)).size).toBe(
+      eligibleCount,
+    )
+    expect(record.primaryAreaCode).toBeTruthy()
+    expect(stored.id).toBe(
+      reviewCardId('municipality-from-area-code', record.code),
+    )
   })
 
   it('counts only cards belonging to the selected mode', () => {
