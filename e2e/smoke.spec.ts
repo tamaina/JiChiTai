@@ -130,6 +130,18 @@ test('root page starts at mode selection', async ({ page }) => {
   await expect(page.getByRole('button', { name: '開始する' })).toBeVisible()
 })
 
+test('wraps the navbar at the 720px breakpoint', async ({ page }) => {
+  await page.setViewportSize({ width: 721, height: 800 })
+  await goto(page, '/')
+  await expect(page.locator('.site-header')).toHaveCSS('flex-direction', 'row')
+
+  await page.setViewportSize({ width: 720, height: 800 })
+  await expect(page.locator('.site-header')).toHaveCSS(
+    'flex-direction',
+    'column',
+  )
+})
+
 test('explores prefectures and municipality details from the map and list', async ({
   page,
 }) => {
