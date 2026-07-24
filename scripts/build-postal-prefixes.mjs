@@ -83,7 +83,7 @@ for (const line of strFromU8(csvFile[1]).split(/\r?\n/)) {
   const postalCode = fields[2]?.replace(/\s/g, '')
   if (!code || !/^\d{7}$/.test(postalCode)) continue
   const prefixes = prefixesByCode.get(code) ?? new Set()
-  prefixes.add(postalCode.slice(0, 2))
+  prefixes.add(postalCode.slice(0, 3))
   prefixesByCode.set(code, prefixes)
 }
 

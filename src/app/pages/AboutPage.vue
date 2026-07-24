@@ -106,7 +106,7 @@ import { ExternalLink } from '@lucide/vue'
             日本郵便「郵便番号データ」
             <ExternalLink :size="15" aria-hidden="true" />
           </a>
-          <span>自治体別の郵便番号上2桁</span>
+          <span>自治体別の郵便番号上3桁</span>
         </li>
       </ul>
     </section>

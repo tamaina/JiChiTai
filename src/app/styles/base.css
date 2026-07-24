@@ -1026,6 +1026,9 @@ td small {
 .review-card-front h1 {
   font-size: clamp(28px, 6vw, 46px);
 }
+.review-card[data-mode='municipality-from-area-code'] .review-card-front {
+  min-height: 140px;
+}
 .review-shape,
 .review-emblem {
   width: min(300px, 65vw);
@@ -1064,17 +1067,68 @@ td small {
   margin: var(--space-2) 0;
   color: var(--color-muted);
 }
-.review-area-code-municipalities {
-  display: flex;
-  max-height: 160px;
-  flex-wrap: wrap;
-  gap: var(--space-2) var(--space-4);
-  justify-content: center;
-  margin: var(--space-3) 0;
+.review-quiz-choices {
+  display: grid;
+  width: min(100%, 620px);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin: var(--space-4) 0 0;
   padding: 0;
-  overflow-y: auto;
+  border: 0;
+}
+.review-quiz-choice {
+  display: grid;
+  min-height: 72px;
+  align-content: center;
+  gap: 2px;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  transition:
+    border-color 120ms ease,
+    background 120ms ease,
+    opacity 120ms ease;
+}
+.review-quiz-choice span {
   color: var(--color-muted);
-  list-style: none;
+  font-size: 12px;
+}
+.review-quiz-choice strong {
+  font-size: 17px;
+}
+.review-quiz-choice:hover:not(:disabled) {
+  border-color: var(--color-accent);
+}
+.review-quiz-choice:disabled {
+  cursor: default;
+  opacity: 0.42;
+}
+.review-quiz-choice-selected {
+  border-color: var(--color-accent);
+}
+.review-quiz-choice-correct:disabled {
+  border-color: var(--color-success);
+  border-left-width: 5px;
+  background: color-mix(
+    in srgb,
+    var(--color-success) 18%,
+    var(--color-surface)
+  );
+  opacity: 1;
+}
+.review-quiz-choice-incorrect:disabled {
+  border-color: var(--color-danger);
+  background: color-mix(in srgb, var(--color-danger) 10%, var(--color-surface));
+  opacity: 0.8;
+}
+.review-quiz-next {
+  min-width: 140px;
+  margin-top: var(--space-5);
 }
 .review-rating {
   display: grid;
@@ -1153,12 +1207,18 @@ td small {
   .review-card-front {
     min-height: 200px;
   }
+  .review-card[data-mode='municipality-from-area-code'] .review-card-front {
+    min-height: 100px;
+  }
   .review-shape,
   .review-emblem {
     height: 200px;
   }
   .review-rating {
     grid-template-columns: repeat(2, 1fr);
+  }
+  .review-quiz-choices {
+    grid-template-columns: 1fr;
   }
 }
 @media (orientation: landscape) and (min-width: 720px) {

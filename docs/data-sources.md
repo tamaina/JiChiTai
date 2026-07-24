@@ -24,14 +24,14 @@
 
 ## 郵便番号
 
-`pnpm postal-prefixes:build`は、日本郵便が公開する1レコード1行・UTF-8形式の全国郵便番号データを自治体コードで集約し、郵便番号の上2桁を生成します。政令指定都市の行政区は親市へまとめ、同じ自治体内に複数の上2桁がある場合はすべて保持します。
+`pnpm postal-prefixes:build`は、日本郵便が公開する1レコード1行・UTF-8形式の全国郵便番号データを自治体コードで集約し、郵便番号の上3桁を生成します。政令指定都市の行政区は親市へまとめ、同じ自治体内に複数の上3桁がある場合はすべて保持します。
 
 ## 生成物
 
 - `src/shared/data/generated-municipalities.ts`: 自治体・都道府県メタデータと配置座標
 - `src/shared/data/generated-area-codes.ts`: 本庁代表電話、市外局番、追加局番と出典
 - `src/shared/data/generated-emblems.ts`: 利用可能な市区町村章と作者・ライセンス・出典
-- `src/shared/data/generated-postal-prefixes.ts`: 自治体別の郵便番号上2桁
+- `src/shared/data/generated-postal-prefixes.ts`: 自治体別の郵便番号上3桁
 - `src/shared/data/generated-national-map.ts`: 全国のクリック可能な都道府県パス
 - `src/shared/data/population-top-1000.ts`: 2020年国勢調査人口による上位1,000自治体コード
 - `public/generated/geometry/{code}.svg`: 自治体別SVG

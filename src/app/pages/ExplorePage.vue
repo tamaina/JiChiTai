@@ -146,8 +146,10 @@ function orderedAreaCodes(record: MunicipalityRecord) {
               :alt="`${selectedMunicipality.name}の市区町村章`"
             />
             <p class="detail-reading">
-              {{ selectedMunicipality.districtName
-              }}{{ selectedMunicipality.kana }}
+              <span v-if="selectedMunicipality.districtName">{{
+                selectedMunicipality.districtName
+              }}</span>
+              <span>{{ selectedMunicipality.kana }}</span>
             </p>
             <h2>{{ selectedMunicipality.name }}</h2>
             <dl class="detail-data">
@@ -156,7 +158,7 @@ function orderedAreaCodes(record: MunicipalityRecord) {
                 <dd>{{ selectedMunicipality.code }}</dd>
               </div>
               <div>
-                <dt>市外局番（本庁優先）</dt>
+                <dt>市外局番</dt>
                 <dd>
                   {{
                     selectedMunicipality.areaCodes.length
@@ -166,7 +168,7 @@ function orderedAreaCodes(record: MunicipalityRecord) {
                 </dd>
               </div>
               <div>
-                <dt>郵便番号 上2桁</dt>
+                <dt>郵便番号 上3桁</dt>
                 <dd>
                   {{
                     selectedMunicipality.postalCodePrefixes.length
@@ -320,6 +322,10 @@ function orderedAreaCodes(record: MunicipalityRecord) {
   overflow-y: auto;
   list-style: none;
 }
+.prefecture-list {
+  margin-right: calc(-1 * var(--space-4));
+  padding-right: var(--space-4);
+}
 .viewer-list li + li {
   border-top: 1px solid var(--color-border);
 }
@@ -340,6 +346,10 @@ function orderedAreaCodes(record: MunicipalityRecord) {
 }
 .viewer-list-row:hover {
   background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+}
+.viewer-list-row:focus-visible {
+  outline-width: 2px;
+  outline-offset: -3px;
 }
 .viewer-list-name,
 .viewer-list-facts {
@@ -375,6 +385,9 @@ function orderedAreaCodes(record: MunicipalityRecord) {
   object-fit: contain;
 }
 .detail-reading {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65em;
   margin: 0;
 }
 .municipality-detail h2 {

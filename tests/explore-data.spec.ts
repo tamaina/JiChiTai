@@ -18,14 +18,14 @@ describe('explorer data', () => {
     for (const record of generatedPostalPrefixes) {
       expect(municipalityByCode.has(record.code)).toBe(true)
       expect(record.prefixes.length).toBeGreaterThan(0)
-      expect(record.prefixes.every((prefix) => /^\d{2}$/.test(prefix))).toBe(
+      expect(record.prefixes.every((prefix) => /^\d{3}$/.test(prefix))).toBe(
         true,
       )
     }
 
-    expect(municipalityByCode.get('10202')?.postalCodePrefixes).toContain('37')
+    expect(municipalityByCode.get('10202')?.postalCodePrefixes).toContain('370')
     expect(municipalityByCode.get('01100')?.postalCodePrefixes).toEqual(
-      expect.arrayContaining(['00', '06']),
+      expect.arrayContaining(['001', '060', '065']),
     )
     expect(
       municipalities.find((item) => item.name === '色丹村')?.postalCodePrefixes,

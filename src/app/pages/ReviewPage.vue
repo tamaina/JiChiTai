@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { Download, RotateCcw, Upload } from '@lucide/vue'
+import { Rating } from 'ts-fsrs'
 import {
   municipalities,
   municipalityShapeUrl,
+  type MunicipalityRecord,
 } from '../../shared/data/municipalities'
+import { municipalityChoices } from '../../shared/game/area-code'
 import {
   ratingOptions,
   reviewCardId,
@@ -35,6 +38,8 @@ const storedCards = ref<StoredReviewCard[]>([])
 const queue = ref<typeof municipalities>([])
 const currentIndex = ref(0)
 const answerVisible = ref(false)
+const areaCodeChoices = ref<MunicipalityRecord[]>([])
+const selectedAreaCodeChoice = ref<string | null>(null)
 const saving = ref(false)
 const loading = ref(true)
 const statusMessage = ref('')
@@ -49,12 +54,11 @@ const currentStoredCard = computed(() => {
       )
     : undefined
 })
-const currentAreaCodeMunicipalities = computed(() => {
-  const areaCode = currentRecord.value?.primaryAreaCode
-  if (selectedMode.value !== 'municipality-from-area-code' || !areaCode)
-    return []
-  return municipalities.filter((record) => record.areaCodes.includes(areaCode))
-})
+const areaCodeChoiceIsCorrect = computed(
+  () =>
+    selectedAreaCodeChoice.value !== null &&
+    selectedAreaCodeChoice.value === currentRecord.value?.code,
+)
 const stats = computed(() =>
   reviewModeStats(municipalities, storedCards.value, selectedMode.value),
 )
@@ -83,6 +87,27 @@ function startReview() {
   currentIndex.value = 0
   answerVisible.value = false
   phase.value = queue.value.length ? 'reviewing' : 'finished'
+  prepareAreaCodeChoices()
+}
+
+function prepareAreaCodeChoices() {
+  selectedAreaCodeChoice.value = null
+  const record = currentRecord.value
+  const areaCode = record?.primaryAreaCode
+  areaCodeChoices.value =
+    selectedMode.value === 'municipality-from-area-code' && record && areaCode
+      ? municipalityChoices(record, areaCode, municipalities, municipalities)
+      : []
+}
+
+function selectAreaCodeChoice(code: string) {
+  if (selectedAreaCodeChoice.value !== null) return
+  selectedAreaCodeChoice.value = code
+}
+
+async function nextAreaCodeQuestion() {
+  if (selectedAreaCodeChoice.value === null) return
+  await rate(areaCodeChoiceIsCorrect.value ? Rating.Good : Rating.Again)
 }
 
 async function rate(rating: (typeof ratingOptions)[number]['rating']) {
@@ -107,6 +132,7 @@ async function rate(rating: (typeof ratingOptions)[number]['rating']) {
     else {
       currentIndex.value += 1
       answerVisible.value = false
+      prepareAreaCodeChoices()
     }
   } catch {
     statusMessage.value = '評価を保存できませんでした。'
@@ -120,6 +146,8 @@ function resetReview() {
   queue.value = []
   currentIndex.value = 0
   answerVisible.value = false
+  areaCodeChoices.value = []
+  selectedAreaCodeChoice.value = null
 }
 
 function previewText(rating: (typeof ratingOptions)[number]['rating']) {
@@ -287,7 +315,10 @@ async function importHistory(event: Event) {
       <article class="review-card" :data-mode="selectedMode">
         <p class="question-prompt">
           {{
-            reviewModes.find((mode) => mode.id === selectedMode)?.description
+            selectedMode === 'municipality-from-area-code'
+              ? 'この市外局番をつかう自治体は？'
+              : reviewModes.find((mode) => mode.id === selectedMode)
+                  ?.description
           }}
         </p>
 
@@ -321,8 +352,57 @@ async function importHistory(event: Event) {
           </h1>
         </div>
 
+        <fieldset
+          v-if="selectedMode === 'municipality-from-area-code'"
+          class="review-quiz-choices"
+        >
+          <legend class="sr-only">自治体の選択肢</legend>
+          <button
+            v-for="choice in areaCodeChoices"
+            :key="choice.code"
+            class="review-quiz-choice"
+            :class="{
+              'review-quiz-choice-selected':
+                selectedAreaCodeChoice === choice.code,
+              'review-quiz-choice-correct':
+                selectedAreaCodeChoice !== null &&
+                choice.code === currentRecord.code,
+              'review-quiz-choice-incorrect':
+                selectedAreaCodeChoice === choice.code &&
+                choice.code !== currentRecord.code,
+            }"
+            type="button"
+            :disabled="selectedAreaCodeChoice !== null"
+            :aria-label="`${choice.prefecture.name}${choice.name}${
+              selectedAreaCodeChoice !== null &&
+              choice.code === currentRecord.code
+                ? '（正解）'
+                : ''
+            }`"
+            @click="selectAreaCodeChoice(choice.code)"
+          >
+            <span>{{ choice.prefecture.name }}</span>
+            <strong>{{ choice.name }}</strong>
+          </button>
+        </fieldset>
+
         <button
-          v-if="!answerVisible"
+          v-if="
+            selectedMode === 'municipality-from-area-code' &&
+            selectedAreaCodeChoice !== null
+          "
+          class="button button-primary review-quiz-next"
+          type="button"
+          :disabled="saving"
+          @click="nextAreaCodeQuestion"
+        >
+          次へ
+        </button>
+
+        <button
+          v-if="
+            selectedMode !== 'municipality-from-area-code' && !answerVisible
+          "
           class="button button-primary review-reveal"
           type="button"
           @click="answerVisible = true"
@@ -330,7 +410,11 @@ async function importHistory(event: Event) {
           答えを見る
         </button>
 
-        <div v-else class="review-answer" aria-live="polite">
+        <div
+          v-else-if="selectedMode !== 'municipality-from-area-code'"
+          class="review-answer"
+          aria-live="polite"
+        >
           <p class="review-answer-label">答え</p>
           <h2 v-if="selectedMode === 'prefecture-from-municipality'">
             {{ currentRecord.prefecture.name }}
@@ -341,24 +425,13 @@ async function importHistory(event: Event) {
               （ほか {{ currentRecord.areaCodes.slice(1).join('、') }}）
             </small>
           </h2>
-          <template v-else-if="selectedMode === 'municipality-from-area-code'">
-            <h2>該当する自治体</h2>
-            <ul class="review-area-code-municipalities">
-              <li
-                v-for="record in currentAreaCodeMunicipalities"
-                :key="record.code"
-              >
-                {{ record.prefecture.name }}{{ record.name }}
-              </li>
-            </ul>
-          </template>
           <h2 v-else>
             {{ currentRecord.prefecture.name }}{{ currentRecord.name }}
           </h2>
-          <p v-if="selectedMode !== 'municipality-from-area-code'">
+          <p>
             {{ currentRecord.kana }}
             <template v-if="currentRecord.postalCodePrefixes.length">
-              ／ 郵便番号上2桁
+              ／ 郵便番号上3桁
               {{ currentRecord.postalCodePrefixes.join('・') }}
             </template>
           </p>

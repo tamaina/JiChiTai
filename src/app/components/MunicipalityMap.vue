@@ -91,6 +91,7 @@ function selectFromKeyboard(event: KeyboardEvent, code: string) {
 <template>
   <div class="municipality-map">
     <svg
+      :class="{ 'map-has-selection': selectedMunicipalityCode }"
       viewBox="0 0 100 100"
       role="group"
       :aria-label="mapLabel"
@@ -171,8 +172,16 @@ svg {
 }
 .map-region:focus-visible {
   outline: none;
-  stroke: var(--color-focus);
-  stroke-width: 1.2;
+  filter: brightness(0.82) drop-shadow(0 0 0.6px var(--color-focus));
+}
+.map-has-selection .map-region:not(.map-region-selected) {
+  fill: transparent;
+  stroke: color-mix(in srgb, var(--color-muted) 55%, transparent);
+  stroke-width: 0.24;
+}
+.map-has-selection .map-region:not(.map-region-selected):hover,
+.map-has-selection .map-region:not(.map-region-selected):focus-visible {
+  fill: color-mix(in srgb, var(--color-muted) 12%, transparent);
 }
 .map-region-selected {
   fill: var(--color-danger);

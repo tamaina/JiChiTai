@@ -66,8 +66,15 @@ test('reviews independently and replaces history only after confirmation', async
   await page.getByLabel('通常モード').check()
   await page.getByRole('button', { name: '最大20枚を学習する' }).click()
   await expect(page.locator('.review-card-front h1')).toHaveText(/^\d{2,5}$/)
-  await page.getByRole('button', { name: '答えを見る' }).click()
-  await expect(page.locator('.review-answer h2')).not.toBeEmpty()
+  await expect(page.locator('.review-quiz-choice')).toHaveCount(4)
+  await page.locator('.review-quiz-choice').first().click()
+  await expect(page.locator('.review-quiz-choice-correct')).toHaveCount(1)
+  await expect(page.getByText('正解', { exact: true })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: '次へ' })).toBeVisible()
+  await expect(page.getByRole('button', { name: '次へ' })).toBeInViewport()
+  await expect(page.getByRole('button', { name: /^普通/ })).toHaveCount(0)
+  await page.getByRole('button', { name: '次へ' }).click()
+  await expect(page.locator('.review-progress')).toContainText('2 / 20')
   await page.getByRole('button', { name: '学習を終了' }).click()
 
   await page.getByLabel('自治体名 → 都道府県').check()
@@ -94,7 +101,7 @@ test('reviews independently and replaces history only after confirmation', async
   page.once('dialog', (dialog) => dialog.accept())
   await page.locator('input[type="file"]').setInputFiles(exportPath!)
   await expect(page.getByRole('status')).toContainText(
-    '1件の学習履歴に置き換えました。',
+    '2件の学習履歴に置き換えました。',
   )
   await expect(page.locator('.review-stats')).toContainText('1学習済み')
 })
@@ -166,6 +173,17 @@ test('explores prefectures and municipality details from the map and list', asyn
     page.getByRole('heading', { name: '都道府県一覧' }),
   ).toBeVisible()
   await expect(page.locator('.prefecture-list > li')).toHaveCount(47)
+  const prefectureListBox = await page.locator('.prefecture-list').boundingBox()
+  const initialDataBox = await page.locator('.explore-data-panel').boundingBox()
+  expect(prefectureListBox).not.toBeNull()
+  expect(initialDataBox).not.toBeNull()
+  expect(
+    Math.abs(
+      prefectureListBox!.x +
+        prefectureListBox!.width -
+        (initialDataBox!.x + initialDataBox!.width),
+    ),
+  ).toBeLessThanOrEqual(2)
 
   await page.getByRole('button', { name: '鳥取県を選択' }).press('Enter')
   await expect(page).toHaveURL(/\/explore\?prefecture=31$/)
@@ -185,10 +203,16 @@ test('explores prefectures and municipality details from the map and list', asyn
   ).toBeVisible()
   await expect(page.locator('.detail-data')).toContainText('31201')
   await expect(page.locator('.detail-data')).toContainText('0857')
-  await expect(page.locator('.detail-data')).toContainText('68')
+  await expect(page.locator('.detail-data')).toContainText('680')
   await expect(page.getByRole('button', { name: '鳥取市を選択' })).toHaveClass(
     /map-region-selected/,
   )
+  const selectedRegion = page.getByRole('button', { name: '鳥取市を選択' })
+  const otherRegion = page
+    .locator('.map-region:not(.map-region-selected)')
+    .first()
+  await expect(selectedRegion).toHaveCSS('fill', /rgb/)
+  await expect(otherRegion).toHaveCSS('fill', 'rgba(0, 0, 0, 0)')
 
   await page.getByRole('button', { name: '鳥取県の一覧へ戻る' }).click()
   await expect(
@@ -199,10 +223,21 @@ test('explores prefectures and municipality details from the map and list', asyn
     page.getByRole('heading', { name: '都道府県一覧' }),
   ).toBeVisible()
   await expect(page.getByText('地図を読み込み中…')).toHaveCount(0)
+
+  await goto(page, '/explore?prefecture=10&municipality=10202')
+  await expect(page.locator('.detail-data')).toContainText('027、0274')
+  await expect(page.locator('.detail-data')).toContainText('027-321-1111')
 })
 
 test('stacks the explorer map and detail on mobile', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
+  await goto(page, '/explore')
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true)
+
   await goto(page, '/explore?prefecture=31&municipality=31201')
   await expect(
     page.getByRole('heading', { name: '鳥取市', exact: true }),
