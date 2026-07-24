@@ -205,6 +205,15 @@ test('explores prefectures and municipality details from the map and list', asyn
   await expect(
     page.getByRole('heading', { name: '市区町村一覧' }),
   ).toBeVisible()
+  const descriptionBox = await page.locator('.explore-heading p').boundingBox()
+  const nationwideButtonBox = await page
+    .getByRole('button', { name: '全国へ戻る' })
+    .boundingBox()
+  expect(descriptionBox).not.toBeNull()
+  expect(nationwideButtonBox).not.toBeNull()
+  expect(nationwideButtonBox!.y).toBeGreaterThanOrEqual(
+    descriptionBox!.y + descriptionBox!.height,
+  )
   const mapBox = await page.locator('.explore-map-panel').boundingBox()
   const dataBox = await page.locator('.explore-data-panel').boundingBox()
   expect(mapBox).not.toBeNull()
