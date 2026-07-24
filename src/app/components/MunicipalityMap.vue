@@ -145,10 +145,11 @@ svg {
   stroke: var(--color-bg);
   stroke-width: 0.16;
   vector-effect: non-scaling-stroke;
+  outline: none !important;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
   transition:
     fill 120ms ease,
-    filter 120ms ease,
     stroke-width 120ms ease;
 }
 .map-region-color-0 {
@@ -176,13 +177,11 @@ svg {
   stroke: var(--map-region-fill);
   stroke-width: 0.6;
 }
-.map-region:hover,
-.map-region:focus-visible {
-  filter: brightness(0.82);
+.map-region:hover {
+  fill: color-mix(in srgb, var(--map-region-fill) 82%, var(--color-bg));
 }
 .map-region:focus-visible {
-  outline: none;
-  filter: brightness(0.68);
+  fill: color-mix(in srgb, var(--map-region-fill) 68%, var(--color-bg));
 }
 .map-has-selection .map-region:not(.map-region-selected) {
   fill: color-mix(in srgb, var(--color-muted) 18%, var(--color-surface));
@@ -197,6 +196,10 @@ svg {
   fill: var(--color-danger);
   stroke: var(--color-bg);
   stroke-width: 0.3;
+}
+.map-region-selected:hover,
+.map-region-selected:focus-visible {
+  fill: color-mix(in srgb, var(--color-danger) 82%, var(--color-bg));
 }
 .map-status {
   position: absolute;
