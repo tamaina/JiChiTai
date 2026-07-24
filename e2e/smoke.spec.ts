@@ -218,6 +218,11 @@ test('explores prefectures and municipality details from the map and list', asyn
   ).toEqual({ map: 'auto', data: 'auto' })
   expect(dataBox!.x).toBeGreaterThan(mapBox!.x + mapBox!.width - 1)
 
+  const focusedRegion = page.locator('.map-region').first()
+  await focusedRegion.focus()
+  await expect(focusedRegion).toHaveCSS('outline-style', 'none')
+  await expect(focusedRegion).toHaveCSS('filter', 'brightness(0.68)')
+
   await page.locator('.viewer-list-row').filter({ hasText: '鳥取市' }).click()
   await expect(page).toHaveURL(/\/explore\?prefecture=31&municipality=31201$/)
   await expect(

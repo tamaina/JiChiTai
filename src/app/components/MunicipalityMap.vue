@@ -182,7 +182,7 @@ svg {
 }
 .map-region:focus-visible {
   outline: none;
-  filter: brightness(0.82) drop-shadow(0 0 0.25px var(--color-focus));
+  filter: brightness(0.68);
 }
 .map-has-selection .map-region:not(.map-region-selected) {
   fill: color-mix(in srgb, var(--color-muted) 18%, var(--color-surface));
