@@ -171,10 +171,16 @@ test('searches municipalities and opens the selected detail', async ({
     page.getByRole('link', { name: /神奈川県.*川崎市/ }),
   ).toBeVisible()
 
+  await page.getByLabel('電話番号').check()
   await search.fill('0857')
   const tottori = page.getByRole('link', { name: /鳥取県.*鳥取市/ })
   await expect(tottori).toContainText('市外局番 0857')
 
+  await search.fill('0857-22-8111')
+  await expect(page.locator('.search-result-list > li')).toHaveCount(1)
+  await expect(tottori).toContainText('本庁代表電話 0857-22-8111')
+
+  await page.getByLabel('郵便番号').check()
   await search.fill('〒680-8571')
   await expect(tottori).toContainText('〒 680')
   await tottori.click()
