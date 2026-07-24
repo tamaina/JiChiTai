@@ -847,6 +847,17 @@ button:disabled {
 .history-emblem {
   padding: 4px;
 }
+@media (prefers-color-scheme: dark) {
+  :is(
+    .detail-emblem,
+    .municipality-emblem-image,
+    .review-emblem,
+    .history-emblem
+  ) {
+    filter: drop-shadow(0 0 1px rgb(255 255 255 / 95%))
+      drop-shadow(0 0 4px rgb(255 255 255 / 45%));
+  }
+}
 .history-question-cell {
   position: relative;
   width: min(34vw, 18rem);

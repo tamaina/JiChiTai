@@ -283,6 +283,17 @@ test('stacks the explorer map and detail on mobile', async ({ page }) => {
   ).toBe(true)
 })
 
+test('adds a light halo to municipality emblems in dark mode', async ({
+  page,
+}) => {
+  await page.emulateMedia({ colorScheme: 'dark' })
+  await goto(page, '/explore?prefecture=31&municipality=31201')
+  await expect(page.locator('.detail-emblem')).toHaveCSS(
+    'filter',
+    /drop-shadow/,
+  )
+})
+
 test('keeps municipality postal data compact in the viewer list', async ({
   page,
 }) => {
