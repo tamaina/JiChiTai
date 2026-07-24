@@ -796,6 +796,9 @@ button:disabled {
   min-width: 640px;
   table-layout: fixed;
 }
+.history-shape-column {
+  width: 64px;
+}
 .history-row-incorrect {
   background: color-mix(in srgb, var(--color-danger) 12%, transparent);
   box-shadow: inset 4px 0 var(--color-danger);

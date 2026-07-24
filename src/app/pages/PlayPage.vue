@@ -1035,6 +1035,13 @@ onBeforeUnmount(() => {
     <h2>回答履歴</h2>
     <div class="history-table-wrap">
       <table>
+        <colgroup>
+          <col class="history-shape-column" />
+          <col />
+          <col />
+          <col />
+          <col />
+        </colgroup>
         <thead>
           <tr>
             <th class="history-shape-cell" aria-label="形または市区町村章"></th>
