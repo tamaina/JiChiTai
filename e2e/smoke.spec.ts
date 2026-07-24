@@ -429,6 +429,10 @@ test('answers a municipality from a licensed municipality emblem', async ({
   expect(historyAnswerCellBox!.width).toBeGreaterThan(historyTimeCellBox!.width)
   await expect(historyResultCell).toHaveCSS('white-space', 'nowrap')
   await expect(historyTimeCell).toHaveCSS('white-space', 'nowrap')
+  await expect(
+    page.getByRole('heading', { name: '1問練習しました' }),
+  ).toBeVisible()
+  await expect(page.getByText(/正答率/)).toHaveCount(0)
 })
 
 test('about page exposes credits as external links', async ({ page }) => {
@@ -557,9 +561,13 @@ test('shows a shareable result text', async ({ page }) => {
   await page.getByLabel('練習').check()
   await page.getByRole('button', { name: '開始する' }).click()
   await page.getByRole('button', { name: '練習を終了' }).click()
+  await expect(
+    page.getByRole('heading', { name: '0問練習しました' }),
+  ).toBeVisible()
+  await expect(page.getByText(/正答率/)).toHaveCount(0)
   await expectShareText(
     page.getByLabel('共有用の結果テキスト'),
-    /^#JiChiTai 都道府県当て 練習\n結果: 正答0問\/誤答0問\/出題1問 \(正答率0%\)\nキータイプ: 0回\/\d+分\d{2}秒\/0KPM\/0WPM$/,
+    /^#JiChiTai 都道府県当て 練習\n結果: 0問練習しました\nキータイプ: 0回\/\d+分\d{2}秒\/0KPM\/0WPM$/,
   )
   await expect(page.getByRole('button', { name: 'コピー' })).toBeVisible()
 })

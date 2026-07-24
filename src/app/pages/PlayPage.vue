@@ -193,6 +193,9 @@ const resultText = computed(() => {
             : '全市町村'
     return `#JiChiTai ${prefectureName ?? ''}${scope} タイピング\n結果: ${formattedResultDuration.value}\n${typingMetricsText.value}\n\nhttps://jichitai.a9z.dev`
   }
+  if (ruleMode.value === 'practice') {
+    return `#JiChiTai ${gameTypeLabel.value} ${ruleModeLabel.value}\n結果: ${history.value.length}問練習しました\n${typingMetricsText.value}\n\nhttps://jichitai.a9z.dev`
+  }
   return `#JiChiTai ${gameTypeLabel.value} ${ruleModeLabel.value}\n結果: 正答${correctCount.value}問/誤答${incorrectCount.value}問/出題${presentedCount.value}問 (正答率${accuracy.value}%)\n${typingMetricsText.value}\n\nhttps://jichitai.a9z.dev`
 })
 const canShare = computed(
@@ -991,8 +994,9 @@ onBeforeUnmount(() => {
 
   <section v-else class="page-section result-screen">
     <p class="eyebrow">結果</p>
-    <h1>{{ correctCount }}問正解</h1>
-    <p class="result-summary">
+    <h1 v-if="ruleMode === 'practice'">{{ history.length }}問練習しました</h1>
+    <h1 v-else>{{ correctCount }}問正解</h1>
+    <p v-if="ruleMode === 'timed'" class="result-summary">
       誤答 {{ incorrectCount }}問・正答率 {{ accuracy }}%
     </p>
     <div class="result-actions">
