@@ -2,7 +2,9 @@
 
 ## 全国データセット
 
-`pnpm geo:build` は、[e-Stat「市区町村名・コード」](https://www.e-stat.go.jp/municipalities/cities)から保存した`data/e-stat-standard-regions.csv`を自治体コード・正式名称・読みに使用します。境界は国土数値情報の行政区域を加工した[geolonia/japanese-admins](https://github.com/geolonia/japanese-admins)から取得し、ゲーム用SVGへ変換します。
+`pnpm geo:build` は、[e-Stat「市区町村名・コード」](https://www.e-stat.go.jp/municipalities/cities)から保存した`data/e-stat-standard-regions.csv`を自治体コード・正式名称・読みに使用します。自治体単体・都道府県詳細の境界は国土数値情報の行政区域を加工した[geolonia/japanese-admins](https://github.com/geolonia/japanese-admins)から取得し、ゲーム用SVGへ変換します。
+
+全国地図の47都道府県には、[biskwikman/jpn-atlas](https://github.com/biskwikman/jpn-atlas)の統合済み`prefectures` TopoJSONを使用します。このデータは国土地理院「地球地図日本」（2016年）を基に投影・簡略化済みです。全国の概観表示だけに限定し、市区町村の選択・詳細・出題には使用しません。これにより、自治体境界から都道府県を実行時または生成時に再統合せず、内部境界や過度な簡略化による欠けを避けます。
 
 [国土数値情報「湖沼データ」（W09、2005年）](https://nlftp.mlit.go.jp/ksj/gml/datalist/KsjTmplt-W09-2005.html)から概算面積10km²以上の湖沼・貯水池を選び、湖岸を約50m精度へ簡略化してから行政界ポリゴンより差し引きます。琵琶湖、霞ヶ浦など29湖沼の水面が自治体・都道府県SVGの穴になります。
 
@@ -32,7 +34,7 @@
 - `src/shared/data/generated-area-codes.ts`: 本庁代表電話、市外局番、追加局番と出典
 - `src/shared/data/generated-emblems.ts`: 利用可能な市区町村章と作者・ライセンス・出典
 - `src/shared/data/generated-postal-prefixes.ts`: 自治体別の郵便番号上3桁
-- `src/shared/data/generated-national-map.ts`: 全国のクリック可能な都道府県パス
+- `src/shared/data/generated-national-map.ts`: jpn-atlasから生成した全国のクリック可能な都道府県パス
 - `src/shared/data/population-top-1000.ts`: 2020年国勢調査人口による上位1,000自治体コード
 - `public/generated/geometry/{code}.svg`: 自治体別SVG
 - `public/generated/prefectures/{code}.svg`: 都道府県別SVG

@@ -1,8 +1,14 @@
 import { createHash } from 'node:crypto'
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { createRequire } from 'node:module'
 import path from 'node:path'
 import { unzipSync, strFromU8 } from 'fflate'
 import polygonClipping from 'polygon-clipping'
+import { feature as topojsonFeature } from 'topojson-client'
+
+const require = createRequire(import.meta.url)
+const japanAtlasFile = require.resolve('jpn-atlas/japan/japan.json')
+const japanAtlasPackage = require('jpn-atlas/package.json')
 
 const ADMINS_URL =
   'https://github.com/geolonia/japanese-admins/archive/refs/heads/master.zip'
@@ -493,6 +499,43 @@ function createSharedProjection(
   return { pathFor, boundsFor, longitudeScale }
 }
 
+function createPlanarPathProjection(
+  geometries,
+  { x = 0, y = 0, width: viewportWidth = 100, height: viewportHeight = 100 },
+) {
+  const points = geometries.flatMap((geometry) => rings(geometry).flat(2))
+  const xs = points.map(([pointX]) => pointX)
+  const ys = points.map(([, pointY]) => pointY)
+  const minX = Math.min(...xs)
+  const maxX = Math.max(...xs)
+  const minY = Math.min(...ys)
+  const maxY = Math.max(...ys)
+  const width = maxX - minX
+  const height = maxY - minY
+  const scale = Math.min(viewportWidth / width, viewportHeight / height)
+  const offsetX = x + (viewportWidth - width * scale) / 2
+  const offsetY = y + (viewportHeight - height * scale) / 2
+
+  return (geometry) =>
+    rings(geometry)
+      .flat()
+      .map((ring) => {
+        const projected = ring.map(([pointX, pointY]) => [
+          offsetX + (pointX - minX) * scale,
+          offsetY + (pointY - minY) * scale,
+        ])
+        // The atlas is already merged by prefecture. Reduce only sub-pixel
+        // detail after fitting it to the viewBox, without capping ring points.
+        const reduced = simplify(projected, 0.02)
+        return `M${reduced
+          .map(
+            ([pointX, pointY]) => `${pointX.toFixed(2)} ${pointY.toFixed(2)}`,
+          )
+          .join('L')}Z`
+      })
+      .join('')
+}
+
 async function downloadZip(url) {
   const response = await fetch(url)
   if (!response.ok)
@@ -500,11 +543,14 @@ async function downloadZip(url) {
   return new Uint8Array(await response.arrayBuffer())
 }
 
-const [standardRegionsCsv, adminsArchive, lakesArchive] = await Promise.all([
-  readFile(standardRegionsFile, 'utf8'),
-  downloadZip(ADMINS_URL),
-  downloadZip(LAKES_URL),
-])
+const [standardRegionsCsv, adminsArchive, lakesArchive, japanAtlasSource] =
+  await Promise.all([
+    readFile(standardRegionsFile, 'utf8'),
+    downloadZip(ADMINS_URL),
+    downloadZip(LAKES_URL),
+    readFile(japanAtlasFile, 'utf8'),
+  ])
+const japanAtlas = JSON.parse(japanAtlasSource)
 const largeLakes = parseLargeLakes(lakesArchive).map((lake) => ({
   ...lake,
   bounds: geometryBounds(lake.geometry),
@@ -644,52 +690,28 @@ function belongsToMainArea(prefectureCode, municipalityCode, geometry) {
   return true
 }
 
-const allMapItems = [...prefectureItems.values()].flat()
-const nationalBounds = allMapItems
-  .map(({ geometry }) => geometryBounds(geometry))
-  .reduce(
-    (result, bounds) => ({
-      minLongitude: Math.min(result.minLongitude, bounds.minLongitude),
-      maxLongitude: Math.max(result.maxLongitude, bounds.maxLongitude),
-      minLatitude: Math.min(result.minLatitude, bounds.minLatitude),
-      maxLatitude: Math.max(result.maxLatitude, bounds.maxLatitude),
-    }),
-    {
-      minLongitude: Infinity,
-      maxLongitude: -Infinity,
-      minLatitude: Infinity,
-      maxLatitude: -Infinity,
-    },
-  )
-const nationalBoundsGeometry = {
-  type: 'Polygon',
-  coordinates: [
-    [
-      [nationalBounds.minLongitude, nationalBounds.minLatitude],
-      [nationalBounds.maxLongitude, nationalBounds.minLatitude],
-      [nationalBounds.maxLongitude, nationalBounds.maxLatitude],
-      [nationalBounds.minLongitude, nationalBounds.maxLatitude],
-      [nationalBounds.minLongitude, nationalBounds.minLatitude],
-    ],
-  ],
-}
-const nationalProjection = createSharedProjection([nationalBoundsGeometry], {
-  x: 3,
-  y: 3,
-  width: 94,
-  height: 94,
-})
-const nationalPrefecturePaths = [...prefectureItems]
-  .map(([code, items]) => ({
-    code,
-    path: items
-      .map(({ geometry }) =>
-        nationalProjection.pathFor(geometry, 0.004, {
-          maxPointsPerRing: 18,
-          minimumBoundsArea: 0.002,
-        }),
-      )
-      .join(''),
+const atlasPrefectures = topojsonFeature(
+  japanAtlas,
+  japanAtlas.objects.prefectures,
+)
+if (
+  atlasPrefectures.type !== 'FeatureCollection' ||
+  atlasPrefectures.features.length !== 47
+)
+  throw new Error('jpn-atlas must contain 47 prefectures')
+const nationalPathFor = createPlanarPathProjection(
+  atlasPrefectures.features.map(({ geometry }) => geometry),
+  {
+    x: 3,
+    y: 3,
+    width: 94,
+    height: 94,
+  },
+)
+const nationalPrefecturePaths = atlasPrefectures.features
+  .map(({ id, geometry }) => ({
+    code: String(id).padStart(2, '0'),
+    path: nationalPathFor(geometry),
   }))
   .sort((first, second) => first.code.localeCompare(second.code))
 const municipalityPathsByPrefecture = {}
@@ -812,6 +834,13 @@ await writeFile(
             name,
             areaKm2: Number(areaKm2.toFixed(2)),
           })),
+        },
+        {
+          package: 'jpn-atlas',
+          version: japanAtlasPackage.version,
+          file: path.relative(process.cwd(), japanAtlasFile),
+          usage: 'nationwide-prefecture-map',
+          sha256: createHash('sha256').update(japanAtlasSource).digest('hex'),
         },
       ],
     },

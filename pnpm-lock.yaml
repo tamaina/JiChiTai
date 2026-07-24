@@ -72,12 +72,18 @@ importers:
       happy-dom:
         specifier: ^18.0.0
         version: 18.0.1
+      jpn-atlas:
+        specifier: ^1.0.2
+        version: 1.0.2
       polygon-clipping:
         specifier: ^0.15.7
         version: 0.15.7
       prettier:
         specifier: ^3.6.0
         version: 3.9.6
+      topojson-client:
+        specifier: '3'
+        version: 3.1.0
       typescript:
         specifier: ^5.9.0
         version: 5.9.3
@@ -1187,6 +1193,9 @@ packages:
     resolution: {integrity: sha512-y4Mg2tXshplEbSGzx7amzPwKKOCGuoSRP/CjEdwwk0FOGlUbq6lKuoyDZTNZkmxHdJtp54hdfY/JUrdL7Xfdug==}
     engines: {node: '>=14'}
 
+  commander@2.20.3:
+    resolution: {integrity: sha512-GpVkmM8vF2vQUkj2LvZmD35JxeJOLCwJ9cUkugyk2nuhbv3+mJvpLYYt+0+USMxE+oj+ey/lJEnhZw75x/OMcQ==}
+
   concat-map@0.0.1:
     resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
 
@@ -1472,6 +1481,9 @@ packages:
 
   jackspeak@3.4.3:
     resolution: {integrity: sha512-OGlZQpz2yfahA/Rd1Y8Cd9SIEsqvXkLVoSw/cgwhnhFMDbsQFeZYoJJ7bIZBS9BcamUW96asq/npPWugM+RQBw==}
+
+  jpn-atlas@1.0.2:
+    resolution: {integrity: sha512-APxUBmGdRo0Zl0Iaivop/JxnITcwl/nKhP1Wbg1cDSL2P8mcDsJLxHYnqG5B2CcDwfOw0GAhoQlPRyaX9L9u1A==}
 
   js-beautify@1.15.4:
     resolution: {integrity: sha512-9/KXeZUKKJwqCXUdBxFJ3vPh467OCckSBmYDwSK/EtV090K+iMJ7zx2S3HLVDIWFQdqMIsZWbnaGiba18aWhaA==}
@@ -1769,6 +1781,10 @@ packages:
   tinyspy@4.0.4:
     resolution: {integrity: sha512-azl+t0z7pw/z958Gy9svOTuzqIk6xq+NSheJzn5MMWtWTFywIacg2wUlzKFGtt3cthx0r2SxMK0yzJOR0IES7Q==}
     engines: {node: '>=14.0.0'}
+
+  topojson-client@3.1.0:
+    resolution: {integrity: sha512-605uxS6bcYxGXw9qi62XyrV6Q3xwbndjachmNxu8HWTtVPxZfEJN9fd/SZS1Q54Sn2y0TMyMxFj/cJINqGHrKw==}
+    hasBin: true
 
   ts-api-utils@2.5.0:
     resolution: {integrity: sha512-OJ/ibxhPlqrMM0UiNHJ/0CKQkoKF243/AEmplt3qpRgkW8VG7IfOS41h7V8TjITqdByHzrjcS/2si+y4lIh8NA==}
@@ -2912,6 +2928,8 @@ snapshots:
 
   commander@10.0.1: {}
 
+  commander@2.20.3: {}
+
   concat-map@0.0.1: {}
 
   config-chain@1.1.13:
@@ -3228,6 +3246,8 @@ snapshots:
       '@isaacs/cliui': 8.0.2
     optionalDependencies:
       '@pkgjs/parseargs': 0.11.0
+
+  jpn-atlas@1.0.2: {}
 
   js-beautify@1.15.4:
     dependencies:
@@ -3546,6 +3566,10 @@ snapshots:
   tinyrainbow@2.0.0: {}
 
   tinyspy@4.0.4: {}
+
+  topojson-client@3.1.0:
+    dependencies:
+      commander: 2.20.3
 
   ts-api-utils@2.5.0(typescript@5.9.3):
     dependencies:

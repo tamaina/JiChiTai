@@ -105,6 +105,7 @@ function selectFromKeyboard(event: KeyboardEvent, code: string) {
         :key="pathItem.code"
         :d="pathItem.path"
         class="map-region"
+        fill-rule="evenodd"
         :class="[
           `map-region-color-${Number(pathItem.code) % 6}`,
           {
@@ -172,10 +173,6 @@ svg {
 }
 .map-region {
   fill: var(--map-region-fill);
-}
-.map-national .map-region {
-  stroke: var(--map-region-fill);
-  stroke-width: 0.6;
 }
 .map-region:hover {
   fill: color-mix(in srgb, var(--map-region-fill) 82%, var(--color-bg));

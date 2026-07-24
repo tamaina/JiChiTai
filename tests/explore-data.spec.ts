@@ -34,12 +34,17 @@ describe('explorer data', () => {
 
   it('has one nationwide path per prefecture', () => {
     expect(nationalPrefecturePaths).toHaveLength(prefectures.length)
-    expect(new Set(nationalPrefecturePaths.map((item) => item.code)).size).toBe(
-      47,
+    expect(nationalPrefecturePaths.map((item) => item.code)).toEqual(
+      prefectures.map((item) => item.code),
     )
     expect(nationalPrefecturePaths.every((item) => item.path.length > 0)).toBe(
       true,
     )
+    expect(
+      nationalPrefecturePaths
+        .find((item) => item.code === '31')
+        ?.path.match(/M/g),
+    ).toHaveLength(1)
   })
 
   it('has one clickable detail path per municipality', async () => {

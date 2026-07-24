@@ -180,17 +180,9 @@ test('explores prefectures and municipality details from the map and list', asyn
   await expect(page.locator('.municipality-map svg')).toHaveClass(
     /map-national/,
   )
-  const nationalRegionColors = await page
-    .locator('.map-national .map-region')
-    .first()
-    .evaluate((element) => {
-      const style = getComputedStyle(element)
-      return { fill: style.fill, stroke: style.stroke }
-    })
-  expect(nationalRegionColors.stroke).toBe(nationalRegionColors.fill)
   await expect(page.locator('.map-national .map-region').first()).toHaveCSS(
     'stroke-width',
-    '0.6px',
+    '0.16px',
   )
   expect(
     Math.abs(
@@ -393,6 +385,7 @@ test('about page exposes credits as external links', async ({ page }) => {
     'Wikidata',
     'Wikimedia Commons',
     '日本郵便「郵便番号データ」',
+    'biskwikman/jpn-atlas',
     'tamaina/JiChiTai',
     'sponsors/tamaina',
   ]) {

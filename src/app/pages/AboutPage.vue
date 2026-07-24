@@ -66,6 +66,17 @@ import { ExternalLink } from '@lucide/vue'
         </li>
         <li>
           <a
+            href="https://github.com/biskwikman/jpn-atlas"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            biskwikman/jpn-atlas
+            <ExternalLink :size="15" aria-hidden="true" />
+          </a>
+          <span>全国地図に使用する統合済み都道府県境界</span>
+        </li>
+        <li>
+          <a
             href="https://nlftp.mlit.go.jp/ksj/gml/datalist/KsjTmplt-W09-2005.html"
             target="_blank"
             rel="noopener noreferrer"
