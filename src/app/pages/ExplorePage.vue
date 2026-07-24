@@ -6,6 +6,7 @@ import MunicipalityMap from '../components/MunicipalityMap.vue'
 import {
   municipalities,
   municipalityByCode,
+  municipalityShapeUrl,
   prefectureByCode,
   prefectures,
   type MunicipalityRecord,
@@ -206,6 +207,11 @@ function formatPostalPrefixes(prefixes: string[]) {
                 <dd>{{ selectedMunicipality.representativePhone }}</dd>
               </div>
             </dl>
+            <img
+              class="detail-shape-image"
+              :src="municipalityShapeUrl(selectedMunicipality.code)"
+              :alt="`${selectedMunicipality.name}の形`"
+            />
             <p v-if="selectedMunicipality.emblem" class="detail-attribution">
               市区町村章:
               <a
@@ -443,6 +449,13 @@ function formatPostalPrefixes(prefixes: string[]) {
 .detail-data dd {
   margin: 0;
   overflow-wrap: anywhere;
+}
+.detail-shape-image {
+  display: block;
+  width: min(240px, 72%);
+  height: 180px;
+  margin: var(--space-6) auto var(--space-4);
+  object-fit: contain;
 }
 .detail-attribution {
   overflow-wrap: anywhere;

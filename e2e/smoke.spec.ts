@@ -232,6 +232,20 @@ test('explores prefectures and municipality details from the map and list', asyn
   await expect(page.locator('.detail-data')).toContainText('31201')
   await expect(page.locator('.detail-data')).toContainText('0857')
   await expect(page.locator('.detail-data')).toContainText('680')
+  const detailShape = page.getByAltText('鳥取市の形')
+  await expect(detailShape).toHaveAttribute(
+    'src',
+    '/generated/geometry/31201.svg',
+  )
+  expect(
+    await detailShape.evaluate((element) =>
+      Boolean(
+        element.compareDocumentPosition(
+          document.querySelector('.detail-attribution')!,
+        ) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ),
+    ),
+  ).toBe(true)
   await expect(page.getByRole('button', { name: '鳥取市を選択' })).toHaveClass(
     /map-region-selected/,
   )
