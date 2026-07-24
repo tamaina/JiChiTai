@@ -818,7 +818,8 @@ button:disabled {
 }
 .history-shape-cell {
   width: 64px;
-  padding-left: 0;
+  padding-inline: 4px;
+  text-align: center;
 }
 .history-location-trigger {
   padding: 0;
@@ -836,6 +837,8 @@ button:disabled {
 }
 .history-shape-button {
   display: block;
+  width: 56px;
+  margin-inline: auto;
 }
 .history-shape {
   display: block;

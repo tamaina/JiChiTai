@@ -383,8 +383,22 @@ test('answers a municipality from a licensed municipality emblem', async ({
     .fill(toRomaji(`${record!.prefecture.kana}${record!.kana}`))
   await question.getByLabel('都道府県+市区町村 ローマ字入力').press('Enter')
   await question.getByRole('button', { name: '練習を終了' }).click()
-  await expect(page.locator('.history-emblem')).toBeVisible()
+  const historyEmblem = page.locator('.history-emblem').first()
+  const historyShapeCell = page.locator('td.history-shape-cell').first()
+  await expect(historyEmblem).toBeVisible()
   await expect(page.locator('.history-emblem-attribution')).toBeVisible()
+  const historyEmblemBox = await historyEmblem.boundingBox()
+  const historyShapeCellBox = await historyShapeCell.boundingBox()
+  expect(historyEmblemBox).not.toBeNull()
+  expect(historyShapeCellBox).not.toBeNull()
+  expect(historyShapeCellBox!.width).toBeLessThanOrEqual(72)
+  expect(
+    Math.abs(
+      historyEmblemBox!.x +
+        historyEmblemBox!.width / 2 -
+        (historyShapeCellBox!.x + historyShapeCellBox!.width / 2),
+    ),
+  ).toBeLessThanOrEqual(2)
 })
 
 test('about page exposes credits as external links', async ({ page }) => {

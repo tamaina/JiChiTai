@@ -1037,7 +1037,7 @@ onBeforeUnmount(() => {
       <table>
         <thead>
           <tr>
-            <th aria-label="形または市区町村章"></th>
+            <th class="history-shape-cell" aria-label="形または市区町村章"></th>
             <th>問題</th>
             <th>入力</th>
             <th>結果</th>
