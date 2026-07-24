@@ -83,6 +83,28 @@ function orderedAreaCodes(record: MunicipalityRecord) {
     ...record.areaCodes.filter((code) => code !== record.primaryAreaCode),
   ]
 }
+
+function formatPostalPrefixes(prefixes: string[]) {
+  const sorted = [...new Set(prefixes)].sort((first, second) =>
+    first.localeCompare(second),
+  )
+  const groups: string[] = []
+
+  for (let start = 0; start < sorted.length;) {
+    let end = start
+    while (
+      end + 1 < sorted.length &&
+      Number(sorted[end + 1]) === Number(sorted[end]) + 1
+    )
+      end += 1
+
+    if (end - start >= 2) groups.push(`${sorted[start]}〜${sorted[end]}`)
+    else groups.push(...sorted.slice(start, end + 1))
+    start = end + 1
+  }
+
+  return groups.join('・')
+}
 </script>
 
 <template>
@@ -172,7 +194,9 @@ function orderedAreaCodes(record: MunicipalityRecord) {
                 <dd>
                   {{
                     selectedMunicipality.postalCodePrefixes.length
-                      ? selectedMunicipality.postalCodePrefixes.join('、')
+                      ? formatPostalPrefixes(
+                          selectedMunicipality.postalCodePrefixes,
+                        )
                       : 'データなし'
                   }}
                 </dd>
@@ -230,7 +254,8 @@ function orderedAreaCodes(record: MunicipalityRecord) {
                   <span
                     >〒
                     {{
-                      municipality.postalCodePrefixes.join('・') || '—'
+                      formatPostalPrefixes(municipality.postalCodePrefixes) ||
+                      '—'
                     }}</span
                   >
                 </span>
@@ -313,15 +338,15 @@ function orderedAreaCodes(record: MunicipalityRecord) {
   font-size: 13px;
 }
 .viewer-list {
-  display: grid;
+  display: block;
   max-height: min(64vh, 720px);
-  gap: 0;
   padding: 0;
   margin: var(--space-3) 0 0;
   overflow-y: auto;
   list-style: none;
 }
-.prefecture-list {
+.prefecture-list,
+.municipality-list {
   margin-right: calc(-1 * var(--space-4));
   padding-right: var(--space-4);
 }
@@ -354,6 +379,12 @@ function orderedAreaCodes(record: MunicipalityRecord) {
 .viewer-list-facts {
   display: grid;
   gap: 2px;
+}
+.viewer-list-name {
+  flex: 0 0 auto;
+}
+.viewer-list-name strong {
+  white-space: nowrap;
 }
 .viewer-list-name small,
 .viewer-list-facts,
@@ -430,9 +461,11 @@ function orderedAreaCodes(record: MunicipalityRecord) {
   .viewer-list-row {
     align-items: flex-start;
     flex-direction: column;
+    justify-content: flex-start;
     gap: var(--space-2);
   }
   .viewer-list-facts {
+    flex-basis: auto;
     width: 100%;
     text-align: left;
   }

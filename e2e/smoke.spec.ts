@@ -277,6 +277,41 @@ test('stacks the explorer map and detail on mobile', async ({ page }) => {
   ).toBe(true)
 })
 
+test('keeps municipality postal data compact in the viewer list', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 800 })
+  await goto(page, '/explore?prefecture=01')
+
+  const list = page.locator('.municipality-list')
+  const panel = page.locator('.explore-data-panel')
+  const listBox = await list.boundingBox()
+  const panelBox = await panel.boundingBox()
+  expect(listBox).not.toBeNull()
+  expect(panelBox).not.toBeNull()
+  expect(
+    Math.abs(listBox!.x + listBox!.width - (panelBox!.x + panelBox!.width)),
+  ).toBeLessThanOrEqual(2)
+
+  const sapporo = page.locator('.viewer-list-row').filter({ hasText: '札幌市' })
+  await expect(sapporo).toContainText('〒 001〜007・060〜065')
+  await expect(sapporo.locator('.viewer-list-name strong')).toHaveCSS(
+    'white-space',
+    'nowrap',
+  )
+
+  await page.setViewportSize({ width: 390, height: 844 })
+  await expect(sapporo).toHaveCSS('justify-content', 'flex-start')
+  const mobileRowBox = await sapporo.boundingBox()
+  expect(mobileRowBox).not.toBeNull()
+  expect(mobileRowBox!.height).toBeLessThan(180)
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true)
+})
+
 test('answers a prefecture from a licensed municipality emblem', async ({
   page,
 }) => {
