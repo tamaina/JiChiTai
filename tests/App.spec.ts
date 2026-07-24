@@ -15,6 +15,7 @@ function mountApp() {
       { path: '/quiz', component: EmptyPage },
       { path: '/review', component: EmptyPage },
       { path: '/explore', component: EmptyPage },
+      { path: '/search', component: EmptyPage },
       { path: '/about', component: EmptyPage },
     ],
   })

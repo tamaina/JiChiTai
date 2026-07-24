@@ -17,6 +17,10 @@ export const router = createRouter({
       path: '/explore',
       component: () => import('../pages/ExplorePage.vue'),
     },
+    {
+      path: '/search',
+      component: () => import('../pages/SearchPage.vue'),
+    },
     { path: '/about', component: AboutPage },
     { path: '/:pathMatch(.*)*', redirect: '/' },
   ],

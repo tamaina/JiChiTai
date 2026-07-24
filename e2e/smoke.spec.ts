@@ -19,7 +19,15 @@ async function expectShareText(textarea: Locator, expectedContent: RegExp) {
   expect(shareUrl.hostname).not.toBe('')
 }
 
-for (const path of ['/', '/play', '/quiz', '/review', '/explore', '/about']) {
+for (const path of [
+  '/',
+  '/play',
+  '/quiz',
+  '/review',
+  '/explore',
+  '/search',
+  '/about',
+]) {
   test(`${path} opens directly`, async ({ page }) => {
     await goto(page, path)
     await expect(page.locator('header')).toBeVisible()
@@ -150,6 +158,30 @@ test('root page starts at mode selection', async ({ page }) => {
     page.getByRole('heading', { name: 'モードを選ぶ' }),
   ).toBeVisible()
   await expect(page.getByRole('button', { name: '開始する' })).toBeVisible()
+})
+
+test('searches municipalities and opens the selected detail', async ({
+  page,
+}) => {
+  await goto(page, '/search')
+  const search = page.getByLabel('検索キーワード')
+
+  await search.fill('かわさき')
+  await expect(
+    page.getByRole('link', { name: /神奈川県.*川崎市/ }),
+  ).toBeVisible()
+
+  await search.fill('0857')
+  const tottori = page.getByRole('link', { name: /鳥取県.*鳥取市/ })
+  await expect(tottori).toContainText('市外局番 0857')
+
+  await search.fill('〒680-8571')
+  await expect(tottori).toContainText('〒 680')
+  await tottori.click()
+  await expect(page).toHaveURL(/\/explore\?prefecture=31&municipality=31201$/)
+  await expect(
+    page.getByRole('heading', { name: '鳥取市', exact: true }),
+  ).toBeVisible()
 })
 
 test('wraps the navbar at the 720px breakpoint', async ({ page }) => {

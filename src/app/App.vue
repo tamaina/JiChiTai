@@ -9,6 +9,7 @@ import { RouterLink, RouterView } from 'vue-router'
       <nav aria-label="メインナビゲーション">
         <RouterLink to="/review">FSRS暗記</RouterLink>
         <RouterLink to="/explore">自治体一覧</RouterLink>
+        <RouterLink to="/search">検索</RouterLink>
         <RouterLink to="/quiz">市外局番クイズ</RouterLink>
         <RouterLink to="/about">このゲームについて</RouterLink>
       </nav>
