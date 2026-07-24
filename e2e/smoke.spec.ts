@@ -34,6 +34,78 @@ for (const path of [
   })
 }
 
+test('publishes an installable PWA and registers its service worker', async ({
+  page,
+}) => {
+  await goto(page, '/')
+
+  const manifestHref = await page
+    .locator('link[rel="manifest"]')
+    .getAttribute('href')
+  expect(manifestHref).toBeTruthy()
+  const manifestResponse = await page.request.get(
+    new URL(manifestHref!, page.url()).href,
+  )
+  expect(manifestResponse.ok()).toBe(true)
+  const manifest = (await manifestResponse.json()) as {
+    name: string
+    display: string
+    start_url: string
+    icons: Array<{ src: string; sizes: string; purpose?: string }>
+  }
+  expect(manifest).toMatchObject({
+    name: 'JiChiTai - 市区町村タイピング',
+    display: 'standalone',
+    start_url: '/',
+  })
+  expect(manifest.icons).toContainEqual(
+    expect.objectContaining({
+      src: '/icon-192.png',
+      sizes: '192x192',
+      purpose: 'any',
+    }),
+  )
+  expect(manifest.icons).toContainEqual(
+    expect.objectContaining({
+      src: '/icon-512.png',
+      sizes: '512x512',
+      purpose: 'any maskable',
+    }),
+  )
+  expect(manifest.icons).toContainEqual(
+    expect.objectContaining({
+      src: '/icon.svg',
+      sizes: 'any',
+      purpose: 'any maskable',
+    }),
+  )
+
+  await expect
+    .poll(() =>
+      page.evaluate(async () =>
+        Boolean(await navigator.serviceWorker.getRegistration()),
+      ),
+    )
+    .toBe(true)
+
+  await page.evaluate(async () => {
+    await navigator.serviceWorker.ready
+  })
+  await page.reload()
+  await expect
+    .poll(
+      () => page.evaluate(() => Boolean(navigator.serviceWorker.controller)),
+      { timeout: 15_000 },
+    )
+    .toBe(true)
+  await page.context().setOffline(true)
+  await goto(page, '/search')
+  await expect(
+    page.getByRole('heading', { name: '自治体を検索' }),
+  ).toBeVisible()
+  await page.context().setOffline(false)
+})
+
 test('reviews independently and replaces history only after confirmation', async ({
   page,
 }) => {
