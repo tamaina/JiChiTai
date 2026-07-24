@@ -536,6 +536,21 @@ function createPlanarPathProjection(
       .join('')
 }
 
+function largestPolygon(geometry) {
+  if (geometry.type === 'Polygon') return geometry
+  const areaOf = (polygon) =>
+    Math.abs(
+      polygon[0].reduce((sum, point, index, ring) => {
+        const previous = ring[(index + ring.length - 1) % ring.length]
+        return sum + previous[0] * point[1] - point[0] * previous[1]
+      }, 0),
+    )
+  const coordinates = geometry.coordinates.reduce((largest, polygon) =>
+    areaOf(polygon) > areaOf(largest) ? polygon : largest,
+  )
+  return { type: 'Polygon', coordinates }
+}
+
 async function downloadZip(url) {
   const response = await fetch(url)
   if (!response.ok)
@@ -699,8 +714,15 @@ if (
   atlasPrefectures.features.length !== 47
 )
   throw new Error('jpn-atlas must contain 47 prefectures')
+const nationalPrefectureFeatures = atlasPrefectures.features.map((feature) => ({
+  ...feature,
+  // Remote Tokyo islands make the nationwide overview too small to read.
+  // Municipality detail data remains untouched.
+  geometry:
+    feature.id === '13' ? largestPolygon(feature.geometry) : feature.geometry,
+}))
 const nationalPathFor = createPlanarPathProjection(
-  atlasPrefectures.features.map(({ geometry }) => geometry),
+  nationalPrefectureFeatures.map(({ geometry }) => geometry),
   {
     x: 3,
     y: 3,
@@ -708,7 +730,7 @@ const nationalPathFor = createPlanarPathProjection(
     height: 94,
   },
 )
-const nationalPrefecturePaths = atlasPrefectures.features
+const nationalPrefecturePaths = nationalPrefectureFeatures
   .map(({ id, geometry }) => ({
     code: String(id).padStart(2, '0'),
     path: nationalPathFor(geometry),

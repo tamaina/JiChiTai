@@ -45,6 +45,11 @@ describe('explorer data', () => {
         .find((item) => item.code === '31')
         ?.path.match(/M/g),
     ).toHaveLength(1)
+    expect(
+      nationalPrefecturePaths
+        .find((item) => item.code === '13')
+        ?.path.match(/M/g),
+    ).toHaveLength(1)
   })
 
   it('has one clickable detail path per municipality', async () => {

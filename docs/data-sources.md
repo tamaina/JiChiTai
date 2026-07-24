@@ -4,7 +4,7 @@
 
 `pnpm geo:build` は、[e-Stat「市区町村名・コード」](https://www.e-stat.go.jp/municipalities/cities)から保存した`data/e-stat-standard-regions.csv`を自治体コード・正式名称・読みに使用します。自治体単体・都道府県詳細の境界は国土数値情報の行政区域を加工した[geolonia/japanese-admins](https://github.com/geolonia/japanese-admins)から取得し、ゲーム用SVGへ変換します。
 
-全国地図の47都道府県には、[biskwikman/jpn-atlas](https://github.com/biskwikman/jpn-atlas)の統合済み`prefectures` TopoJSONを使用します。このデータは国土地理院「地球地図日本」（2016年）を基に投影・簡略化済みです。全国の概観表示だけに限定し、市区町村の選択・詳細・出題には使用しません。これにより、自治体境界から都道府県を実行時または生成時に再統合せず、内部境界や過度な簡略化による欠けを避けます。
+全国地図の47都道府県には、[biskwikman/jpn-atlas](https://github.com/biskwikman/jpn-atlas)の統合済み`prefectures` TopoJSONを使用します。このデータは国土地理院「地球地図日本」（2016年）を基に投影・簡略化済みです。全国の概観表示だけに限定し、市区町村の選択・詳細・出題には使用しません。これにより、自治体境界から都道府県を実行時または生成時に再統合せず、内部境界や過度な簡略化による欠けを避けます。全国図の縮尺を読みやすく保つため、東京都は本土側の最大ポリゴンだけを描画し、島しょ部は省略します。
 
 [国土数値情報「湖沼データ」（W09、2005年）](https://nlftp.mlit.go.jp/ksj/gml/datalist/KsjTmplt-W09-2005.html)から概算面積10km²以上の湖沼・貯水池を選び、湖岸を約50m精度へ簡略化してから行政界ポリゴンより差し引きます。琵琶湖、霞ヶ浦など29湖沼の水面が自治体・都道府県SVGの穴になります。
 
