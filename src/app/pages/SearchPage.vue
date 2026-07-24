@@ -1,16 +1,49 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { Search } from '@lucide/vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import {
   searchMunicipalities,
   type MunicipalitySearchMode,
 } from '../../shared/data/municipality-search'
 
-const query = ref('')
+const route = useRoute()
+const router = useRouter()
+const routeQuery = () =>
+  typeof route.query.q === 'string' ? route.query.q : ''
+
+const query = ref(routeQuery())
 const mode = ref<MunicipalitySearchMode>('all')
 const normalizedQuery = computed(() => query.value.trim())
 const results = computed(() => searchMunicipalities(query.value, mode.value))
+let queryHistoryTimer: ReturnType<typeof setTimeout> | undefined
+
+watch(
+  () => route.query.q,
+  () => {
+    const nextQuery = routeQuery()
+    if (query.value !== nextQuery) query.value = nextQuery
+  },
+)
+
+watch(query, (nextQuery) => {
+  clearTimeout(queryHistoryTimer)
+
+  const q = nextQuery.trim()
+  if (q === routeQuery()) return
+
+  queryHistoryTimer = setTimeout(() => {
+    const nextRouteQuery = { ...route.query }
+    delete nextRouteQuery.q
+    void router.push({
+      path: '/search',
+      query: q ? { ...nextRouteQuery, q } : nextRouteQuery,
+    })
+  }, 1000)
+})
+
+onBeforeUnmount(() => clearTimeout(queryHistoryTimer))
+
 const inputPlaceholder = computed(() => {
   if (mode.value === 'postal') return '例: 680、680-8571'
   if (mode.value === 'phone') return '例: 0857、0857-22-8111'
@@ -277,16 +310,5 @@ const inputHelp = computed(() => {
 .search-prompt,
 .empty-results {
   padding: var(--space-6) 0;
-}
-@media (max-width: 520px) {
-  .search-result-row {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: var(--space-2);
-  }
-  .search-result-data {
-    flex-basis: auto;
-    text-align: left;
-  }
 }
 </style>

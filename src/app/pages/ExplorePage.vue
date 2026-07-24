@@ -467,17 +467,6 @@ function formatPostalPrefixes(prefixes: string[]) {
   }
 }
 @media (max-width: 640px) {
-  .viewer-list-row {
-    align-items: flex-start;
-    flex-direction: column;
-    justify-content: flex-start;
-    gap: var(--space-2);
-  }
-  .viewer-list-facts {
-    flex-basis: auto;
-    width: 100%;
-    text-align: left;
-  }
   .detail-data > div {
     grid-template-columns: 1fr;
     gap: var(--space-1);

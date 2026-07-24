@@ -262,6 +262,48 @@ test('searches municipalities and opens the selected detail', async ({
   ).toBeVisible()
 })
 
+test('loads and records settled search queries in browser history', async ({
+  page,
+}) => {
+  await goto(page, '/search?q=かわさき')
+  const search = page.getByLabel('検索キーワード')
+
+  await expect(search).toHaveValue('かわさき')
+  await expect(
+    page.getByRole('link', { name: /神奈川県.*川崎市/ }),
+  ).toBeVisible()
+
+  await search.fill('松江')
+  await expect(page).toHaveURL((url) => url.searchParams.get('q') === '松江', {
+    timeout: 2_000,
+  })
+  await search.fill('鳥取')
+  await expect(page).toHaveURL((url) => url.searchParams.get('q') === '鳥取', {
+    timeout: 2_000,
+  })
+
+  await page.goBack()
+  await expect(page).toHaveURL((url) => url.searchParams.get('q') === '松江')
+  await expect(search).toHaveValue('松江')
+})
+
+test('keeps search result rows horizontal on mobile', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await goto(page, '/search?q=鳥取')
+
+  const result = page.getByRole('link', { name: /鳥取県.*鳥取市/ })
+  await expect(result).toHaveCSS('flex-direction', 'row')
+  await expect(result.locator('.search-result-data')).toHaveCSS(
+    'text-align',
+    'right',
+  )
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true)
+})
+
 test('wraps the navbar at the 720px breakpoint', async ({ page }) => {
   await page.setViewportSize({ width: 721, height: 800 })
   await goto(page, '/')
@@ -443,7 +485,12 @@ test('keeps municipality postal data compact in the viewer list', async ({
   )
 
   await page.setViewportSize({ width: 390, height: 844 })
-  await expect(sapporo).toHaveCSS('justify-content', 'flex-start')
+  await expect(sapporo).toHaveCSS('flex-direction', 'row')
+  await expect(sapporo).toHaveCSS('justify-content', 'space-between')
+  await expect(sapporo.locator('.viewer-list-facts')).toHaveCSS(
+    'text-align',
+    'right',
+  )
   const mobileRowBox = await sapporo.boundingBox()
   expect(mobileRowBox).not.toBeNull()
   expect(mobileRowBox!.height).toBeLessThan(180)
