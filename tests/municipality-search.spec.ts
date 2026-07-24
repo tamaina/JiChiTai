@@ -30,10 +30,18 @@ describe('municipality search', () => {
     expect(resultCodes('〒680-8571', 'postal')).toContain('31201')
   })
 
+  it('matches normalized five-digit municipality codes', () => {
+    expect(resultCodes('31201', 'code')).toEqual(['31201'])
+    expect(resultCodes('３１２０１', 'code')).toEqual(['31201'])
+    expect(resultCodes('31201')).toContain('31201')
+  })
+
   it('limits each number type to its selected search mode', () => {
     expect(resultCodes('川崎', 'postal')).toEqual([])
     expect(resultCodes('0857', 'postal')).not.toContain('31201')
     expect(resultCodes('680', 'phone')).not.toContain('31201')
+    expect(resultCodes('31201', 'postal')).not.toContain('31201')
+    expect(resultCodes('0857', 'code')).toEqual([])
   })
 
   it('uses only the longest phone prefix for a longer number', () => {

@@ -45,16 +45,18 @@ watch(query, (nextQuery) => {
 onBeforeUnmount(() => clearTimeout(queryHistoryTimer))
 
 const inputPlaceholder = computed(() => {
+  if (mode.value === 'code') return '例: 31201'
   if (mode.value === 'postal') return '例: 680、680-8571'
   if (mode.value === 'phone') return '例: 0857、0857-22-8111'
-  return '例: 川崎、かわさき、0857、680-8571'
+  return '例: 川崎、31201、0857、680-8571'
 })
 const inputHelp = computed(() => {
+  if (mode.value === 'code') return '5桁の自治体コードで検索できます。'
   if (mode.value === 'postal')
     return '郵便番号は上3桁、またはハイフンを含む7桁で検索できます。'
   if (mode.value === 'phone')
     return '本庁代表電話は番号全体、それ以外の電話番号は市外局番まで絞り込みます。'
-  return '名前、市外局番、本庁代表電話、郵便番号から横断検索します。'
+  return '名前、自治体コード、市外局番、本庁代表電話、郵便番号から横断検索します。'
 })
 </script>
 
@@ -63,7 +65,7 @@ const inputHelp = computed(() => {
     <p class="eyebrow">自治体検索</p>
     <h1>自治体を検索</h1>
     <p class="lead">
-      自治体名、郵便番号、電話番号から自治体を探せます。「すべて」では、自治体名を漢字・ひらがな・カタカナ・ローマ字の一部でも検索できます。
+      自治体名、自治体コード、郵便番号、電話番号から自治体を探せます。「すべて」では、自治体名を漢字・ひらがな・カタカナ・ローマ字の一部でも検索できます。
     </p>
 
     <fieldset class="search-mode">
@@ -71,6 +73,10 @@ const inputHelp = computed(() => {
       <label>
         <input v-model="mode" type="radio" value="all" />
         すべて
+      </label>
+      <label>
+        <input v-model="mode" type="radio" value="code" />
+        自治体コード
       </label>
       <label>
         <input v-model="mode" type="radio" value="postal" />

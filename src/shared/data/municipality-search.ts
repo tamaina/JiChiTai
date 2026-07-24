@@ -1,7 +1,7 @@
 import { toHiragana } from 'wanakana'
 import { municipalities, type MunicipalityRecord } from './municipalities'
 
-export type MunicipalitySearchMode = 'all' | 'postal' | 'phone'
+export type MunicipalitySearchMode = 'all' | 'code' | 'postal' | 'phone'
 
 export interface MunicipalitySearchResult {
   municipality: MunicipalityRecord
@@ -46,6 +46,7 @@ export function searchMunicipalities(
   const digits = numericQuery(query)
   const kanaQuery = digits ? '' : toHiragana(text, { IMEMode: true })
   const searchNames = mode === 'all'
+  const searchMunicipalityCodes = mode === 'all' || mode === 'code'
   const searchPostalCodes =
     mode === 'postal' ||
     (mode === 'all' && (digits?.length === 3 || digits?.length === 7))
@@ -87,8 +88,11 @@ export function searchMunicipalities(
       !digits &&
       (normalizeText(municipality.name).includes(text) ||
         toHiragana(normalizeText(municipality.kana)).includes(kanaQuery))
+    const municipalityCodeMatches =
+      searchMunicipalityCodes && digits === municipality.code
 
     return nameMatches ||
+      municipalityCodeMatches ||
       matchedAreaCodes.length ||
       matchedPhoneNumbers.length ||
       matchedPostalCodePrefixes.length
