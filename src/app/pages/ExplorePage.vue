@@ -296,7 +296,6 @@ function orderedAreaCodes(record: MunicipalityRecord) {
   padding: var(--space-4);
 }
 .explore-data-panel {
-  min-height: 320px;
   padding: var(--space-4);
 }
 .panel-heading,
@@ -421,10 +420,6 @@ function orderedAreaCodes(record: MunicipalityRecord) {
   .explore-layout {
     grid-template-columns: minmax(0, 1.15fr) minmax(340px, 0.85fr);
     align-items: start;
-  }
-  .explore-map-panel,
-  .explore-data-panel {
-    min-height: min(70vh, 760px);
   }
 }
 @media (max-width: 640px) {

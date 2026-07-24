@@ -91,7 +91,10 @@ function selectFromKeyboard(event: KeyboardEvent, code: string) {
 <template>
   <div class="municipality-map">
     <svg
-      :class="{ 'map-has-selection': selectedMunicipalityCode }"
+      :class="{
+        'map-national': !prefectureCode,
+        'map-has-selection': selectedMunicipalityCode,
+      }"
       viewBox="0 0 100 100"
       role="group"
       :aria-label="mapLabel"
@@ -149,22 +152,29 @@ svg {
     stroke-width 120ms ease;
 }
 .map-region-color-0 {
-  fill: #66c7bd;
+  --map-region-fill: #66c7bd;
 }
 .map-region-color-1 {
-  fill: #7ab7c9;
+  --map-region-fill: #7ab7c9;
 }
 .map-region-color-2 {
-  fill: #9fc17a;
+  --map-region-fill: #9fc17a;
 }
 .map-region-color-3 {
-  fill: #d2b46c;
+  --map-region-fill: #d2b46c;
 }
 .map-region-color-4 {
-  fill: #c99bba;
+  --map-region-fill: #c99bba;
 }
 .map-region-color-5 {
-  fill: #8fb0d1;
+  --map-region-fill: #8fb0d1;
+}
+.map-region {
+  fill: var(--map-region-fill);
+}
+.map-national .map-region {
+  stroke: var(--map-region-fill);
+  stroke-width: 0.6;
 }
 .map-region:hover,
 .map-region:focus-visible {
@@ -172,21 +182,21 @@ svg {
 }
 .map-region:focus-visible {
   outline: none;
-  filter: brightness(0.82) drop-shadow(0 0 0.6px var(--color-focus));
+  filter: brightness(0.82) drop-shadow(0 0 0.25px var(--color-focus));
 }
 .map-has-selection .map-region:not(.map-region-selected) {
-  fill: transparent;
+  fill: color-mix(in srgb, var(--color-muted) 18%, var(--color-surface));
   stroke: color-mix(in srgb, var(--color-muted) 55%, transparent);
   stroke-width: 0.24;
 }
 .map-has-selection .map-region:not(.map-region-selected):hover,
 .map-has-selection .map-region:not(.map-region-selected):focus-visible {
-  fill: color-mix(in srgb, var(--color-muted) 12%, transparent);
+  fill: color-mix(in srgb, var(--color-muted) 28%, var(--color-surface));
 }
 .map-region-selected {
   fill: var(--color-danger);
   stroke: var(--color-bg);
-  stroke-width: 0.55;
+  stroke-width: 0.3;
 }
 .map-status {
   position: absolute;

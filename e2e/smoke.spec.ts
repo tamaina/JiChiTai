@@ -177,6 +177,21 @@ test('explores prefectures and municipality details from the map and list', asyn
   const initialDataBox = await page.locator('.explore-data-panel').boundingBox()
   expect(prefectureListBox).not.toBeNull()
   expect(initialDataBox).not.toBeNull()
+  await expect(page.locator('.municipality-map svg')).toHaveClass(
+    /map-national/,
+  )
+  const nationalRegionColors = await page
+    .locator('.map-national .map-region')
+    .first()
+    .evaluate((element) => {
+      const style = getComputedStyle(element)
+      return { fill: style.fill, stroke: style.stroke }
+    })
+  expect(nationalRegionColors.stroke).toBe(nationalRegionColors.fill)
+  await expect(page.locator('.map-national .map-region').first()).toHaveCSS(
+    'stroke-width',
+    '0.6px',
+  )
   expect(
     Math.abs(
       prefectureListBox!.x +
@@ -194,6 +209,13 @@ test('explores prefectures and municipality details from the map and list', asyn
   const dataBox = await page.locator('.explore-data-panel').boundingBox()
   expect(mapBox).not.toBeNull()
   expect(dataBox).not.toBeNull()
+  expect(
+    await page.locator('.explore-map-panel').evaluate((element) => ({
+      map: getComputedStyle(element).minHeight,
+      data: getComputedStyle(document.querySelector('.explore-data-panel')!)
+        .minHeight,
+    })),
+  ).toEqual({ map: 'auto', data: 'auto' })
   expect(dataBox!.x).toBeGreaterThan(mapBox!.x + mapBox!.width - 1)
 
   await page.locator('.viewer-list-row').filter({ hasText: '鳥取市' }).click()
@@ -212,7 +234,8 @@ test('explores prefectures and municipality details from the map and list', asyn
     .locator('.map-region:not(.map-region-selected)')
     .first()
   await expect(selectedRegion).toHaveCSS('fill', /rgb/)
-  await expect(otherRegion).toHaveCSS('fill', 'rgba(0, 0, 0, 0)')
+  await expect(otherRegion).toHaveCSS('fill', /rgb/)
+  await expect(otherRegion).not.toHaveCSS('fill', 'rgba(0, 0, 0, 0)')
 
   await page.getByRole('button', { name: '鳥取県の一覧へ戻る' }).click()
   await expect(
