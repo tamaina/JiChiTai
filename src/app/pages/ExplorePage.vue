@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { ArrowLeft, Map as MapIcon } from '@lucide/vue'
+import { computed, ref, watch } from 'vue'
+import { ArrowLeft, Download, Map as MapIcon } from '@lucide/vue'
 import { useRoute, useRouter } from 'vue-router'
 import MunicipalityMap from '../components/MunicipalityMap.vue'
 import {
@@ -11,9 +11,27 @@ import {
   prefectures,
   type MunicipalityRecord,
 } from '../../shared/data/municipalities'
+import {
+  imeDictionaryFormats,
+  nationwideDictionaryUrl,
+  prefectureDictionaryUrl,
+  preferredImeDictionaryFormat,
+  type ImeDictionaryFormat,
+} from '../../shared/data/ime-dictionaries'
 
 const route = useRoute()
 const router = useRouter()
+const dictionaryFormatStorageKey = 'jichitai.ime-dictionary-format'
+const storedDictionaryFormat = localStorage.getItem(dictionaryFormatStorageKey)
+const selectedDictionaryFormat = ref<ImeDictionaryFormat>(
+  imeDictionaryFormats.some((item) => item.value === storedDictionaryFormat)
+    ? (storedDictionaryFormat as ImeDictionaryFormat)
+    : preferredImeDictionaryFormat(navigator.userAgent, navigator.platform),
+)
+
+watch(selectedDictionaryFormat, (format) =>
+  localStorage.setItem(dictionaryFormatStorageKey, format),
+)
 
 const selectedPrefectureCode = computed(() => {
   const code =
@@ -123,6 +141,26 @@ function formatPostalPrefixes(prefixes: string[]) {
         <p>
           地図または一覧から選択すると、自治体コード・市外局番・郵便番号を確認できます。
         </p>
+        <div v-if="!selectedPrefecture" class="dictionary-downloads">
+          <label for="dictionary-format">IMEの形式</label>
+          <select id="dictionary-format" v-model="selectedDictionaryFormat">
+            <option
+              v-for="format in imeDictionaryFormats"
+              :key="format.value"
+              :value="format.value"
+            >
+              {{ format.label }}
+            </option>
+          </select>
+          <a
+            class="button button-primary"
+            :href="nationwideDictionaryUrl(selectedDictionaryFormat)"
+            download
+          >
+            <Download :size="17" aria-hidden="true" />
+            全国ZIPをダウンロード
+          </a>
+        </div>
       </div>
       <button
         v-if="selectedPrefecture"
@@ -288,6 +326,20 @@ function formatPostalPrefixes(prefixes: string[]) {
                 </span>
                 <span>{{ municipalityCounts.get(prefecture.code) }}自治体</span>
               </button>
+              <a
+                class="prefecture-download"
+                :href="
+                  prefectureDictionaryUrl(
+                    selectedDictionaryFormat,
+                    prefecture.code,
+                  )
+                "
+                :aria-label="`${prefecture.name}の${imeDictionaryFormats.find((item) => item.value === selectedDictionaryFormat)?.label}用IME辞書をダウンロード`"
+                :title="`${prefecture.name}のIME辞書をダウンロード`"
+                download
+              >
+                <Download :size="18" aria-hidden="true" />
+              </a>
             </li>
           </ul>
         </template>
@@ -311,6 +363,29 @@ function formatPostalPrefixes(prefixes: string[]) {
   max-width: 48rem;
   margin-bottom: 0;
   color: var(--color-muted);
+}
+.dictionary-downloads {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+.dictionary-downloads label {
+  font-size: 13px;
+  font-weight: 600;
+}
+.dictionary-downloads select {
+  min-height: 42px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: inherit;
+  font: inherit;
+}
+.dictionary-downloads .button {
+  gap: var(--space-2);
 }
 .explore-layout {
   display: grid;
@@ -358,6 +433,23 @@ function formatPostalPrefixes(prefixes: string[]) {
 }
 .viewer-list li + li {
   border-top: 1px solid var(--color-border);
+}
+.prefecture-list li {
+  display: flex;
+  align-items: stretch;
+}
+.prefecture-list .viewer-list-row {
+  min-width: 0;
+}
+.prefecture-download {
+  display: inline-flex;
+  flex: 0 0 48px;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-accent);
+}
+.prefecture-download:hover {
+  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
 }
 .viewer-list-row {
   display: flex;

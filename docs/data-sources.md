@@ -40,6 +40,9 @@
 - `public/generated/prefectures/{code}.svg`: 都道府県別SVG
 - `public/generated/emblems/{code}.{svg,png,...}`: ライセンス確認済みの市区町村章
 - `public/generated/maps/{prefectureCode}.json`: 都道府県別のクリック可能な市区町村パス
+- `public/generated/dictionaries/`: 都道府県別IME辞書と形式別の全国ZIP
 - `generated/national-dataset-metadata.json`: 入力データのURL・ハッシュ、生成日時、対象湖沼（Git管理対象外）
 
 生成処理は行政界と湖沼データをネットワークから取得し、最大4GBのNode.jsヒープを使用します。生成後は`src/shared/data/generated-municipalities.ts`をPrettierで整形してください。
+
+`pnpm ime-dictionaries:build`は生成済み自治体マスターを入力として、macOS plist、Microsoft IME、Google日本語入力/Mozc向けの辞書を生成します。各自治体について正式名と市・区・町・村を除いた表記を収録し、都道府県は都・府・県を除きます。北海道だけは正式な「北海道」を維持します。Microsoft IMEとGoogle/Mozcのコメント欄には都道府県名と、データがある場合は郡名を記録します。

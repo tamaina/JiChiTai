@@ -30,7 +30,10 @@ pnpm geo:build   # 全国の境界形状と自治体データを再生成
 pnpm area-codes:build # J-LISから代表電話と市外局番を再生成
 pnpm emblems:build # WikidataとCommonsから市区町村章を再生成
 pnpm postal-prefixes:build # 日本郵便から郵便番号上3桁を再生成
+pnpm ime-dictionaries:build # macOS、Microsoft IME、Google/Mozc辞書を再生成
 ```
+
+「自治体一覧」の全国表示から、OSに応じて初期選択されたIME形式の全国ZIP、または都道府県別辞書をダウンロードできます。都道府県別ファイルは`10-gunma.plist`のように都道府県コードとローマ字で命名します。手動で形式を変更すると、その選択をブラウザに保存します。辞書には都道府県の接尾辞なし表記と、市区町村の接尾辞あり・なし表記を収録します（北海道は「北海道」のままです）。WindowsおよびGoogle/Mozc版のコメントには都道府県名と、該当する場合は郡名も収録します。
 
 初回デプロイ前のみ `pnpm exec wrangler login` で Cloudflare へログインしてください。公開設定は `VITE_*`（Vue）、通常の Worker 変数は `wrangler.jsonc` の `vars`、秘密情報は `wrangler secret put NAME` で管理します。ローカル秘密情報は `.dev.vars.example` を参考に `.dev.vars` へ置きます。
 
