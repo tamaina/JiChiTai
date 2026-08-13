@@ -29,13 +29,13 @@ describe('IME dictionary downloads', () => {
       '/generated/dictionaries/macos/10-gunma.plist',
     )
     expect(nationwideDictionaryUrl('windows')).toBe(
-      '/generated/dictionaries/jichitai-windows.zip',
+      '/generated/dictionaries/windows/jichitai-all.txt',
     )
   })
 
   it('generates 47 dictionaries for every format', async () => {
     for (const format of ['macos', 'windows', 'google']) {
-      expect(await readdir(path.join(dictionaryRoot, format))).toHaveLength(47)
+      expect(await readdir(path.join(dictionaryRoot, format))).toHaveLength(48)
     }
   })
 
@@ -70,9 +70,28 @@ describe('IME dictionary downloads', () => {
       const archive = unzipSync(
         await readFile(path.join(dictionaryRoot, `jichitai-${format}.zip`)),
       )
-      expect(Object.keys(archive)).toHaveLength(48)
+      expect(Object.keys(archive)).toHaveLength(49)
       expect(Object.keys(archive)).toContain('README.txt')
+      expect(Object.keys(archive)).toContain(
+        `jichitai-all.${format === 'macos' ? 'plist' : 'txt'}`,
+      )
       expect(strFromU8(archive['README.txt'])).toContain('47')
     }
+  })
+
+  it('provides a single nationwide dictionary for every format', async () => {
+    const mac = await readFile(
+      path.join(dictionaryRoot, 'macos/jichitai-all.plist'),
+      'utf8',
+    )
+    expect(mac).toContain('<string>北海道</string>')
+    expect(mac).toContain('<string>沖縄</string>')
+
+    const google = await readFile(
+      path.join(dictionaryRoot, 'google/jichitai-all.txt'),
+      'utf8',
+    )
+    expect(google).toContain('ほっかいどう\t北海道')
+    expect(google).toContain('おきなわ\t沖縄')
   })
 })

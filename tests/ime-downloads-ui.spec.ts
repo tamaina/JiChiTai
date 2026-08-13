@@ -22,7 +22,7 @@ describe('IME dictionary download UI', () => {
 
     expect(
       wrapper.get<HTMLAnchorElement>('a[download]').attributes('href'),
-    ).toBe('/generated/dictionaries/jichitai-macos.zip')
+    ).toBe('/generated/dictionaries/macos/jichitai-all.plist')
     expect(wrapper.findAll('.prefecture-download')).toHaveLength(47)
     expect(
       wrapper.get<HTMLAnchorElement>('.prefecture-download').attributes('href'),
@@ -31,7 +31,7 @@ describe('IME dictionary download UI', () => {
     await wrapper.get('select').setValue('windows')
     expect(
       wrapper.get<HTMLAnchorElement>('a[download]').attributes('href'),
-    ).toBe('/generated/dictionaries/jichitai-windows.zip')
+    ).toBe('/generated/dictionaries/windows/jichitai-all.txt')
     expect(
       wrapper.get<HTMLAnchorElement>('.prefecture-download').attributes('href'),
     ).toBe('/generated/dictionaries/windows/01-hokkaido.txt')

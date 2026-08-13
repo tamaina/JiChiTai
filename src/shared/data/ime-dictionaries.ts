@@ -35,5 +35,8 @@ export function prefectureDictionaryUrl(
 }
 
 export function nationwideDictionaryUrl(format: ImeDictionaryFormat) {
-  return `/generated/dictionaries/jichitai-${format}.zip`
+  const extension =
+    imeDictionaryFormats.find((item) => item.value === format)?.extension ??
+    'txt'
+  return `/generated/dictionaries/${format}/jichitai-all.${extension}`
 }

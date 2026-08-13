@@ -158,7 +158,7 @@ function formatPostalPrefixes(prefixes: string[]) {
             download
           >
             <Download :size="17" aria-hidden="true" />
-            全国ZIPをダウンロード
+            全国版をダウンロード
           </a>
         </div>
       </div>

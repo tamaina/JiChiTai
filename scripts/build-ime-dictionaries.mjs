@@ -78,7 +78,12 @@ function stripMunicipality(record) {
 }
 
 function entriesFor(prefecture) {
-  const entries = [{ ...stripPrefecture(prefecture), comment: prefecture.name }]
+  const entries = [
+    {
+      ...stripPrefecture(prefecture),
+      comment: prefecture.name,
+    },
+  ]
   for (const municipality of municipalities.filter(
     (item) => item.prefectureCode === prefecture.code,
   )) {
@@ -86,7 +91,11 @@ function entriesFor(prefecture) {
       .filter(Boolean)
       .join('／')
     entries.push(
-      { reading: municipality.kana, word: municipality.name, comment },
+      {
+        reading: municipality.kana,
+        word: municipality.name,
+        comment,
+      },
       { ...stripMunicipality(municipality), comment },
     )
   }
@@ -173,9 +182,12 @@ for (const [formatName, format] of Object.entries(formats)) {
   const directory = path.join(output, formatName)
   await mkdir(directory, { recursive: true })
   const archive = {}
+  const nationwideEntries = []
   for (const prefecture of prefectures) {
     const filename = `${prefectureFileStem(prefecture)}.${format.extension}`
-    const rendered = format.render(entriesFor(prefecture))
+    const prefectureEntries = entriesFor(prefecture)
+    nationwideEntries.push(...prefectureEntries)
+    const rendered = format.render(prefectureEntries)
     const bytes =
       format.encoding === 'utf16le'
         ? Buffer.concat([
@@ -186,6 +198,17 @@ for (const [formatName, format] of Object.entries(formats)) {
     await writeFile(path.join(directory, filename), bytes)
     archive[filename] = new Uint8Array(bytes)
   }
+  const nationwideFilename = `jichitai-all.${format.extension}`
+  const nationwideRendered = format.render(nationwideEntries)
+  const nationwideBytes =
+    format.encoding === 'utf16le'
+      ? Buffer.concat([
+          Buffer.from([0xff, 0xfe]),
+          Buffer.from(nationwideRendered, 'utf16le'),
+        ])
+      : Buffer.from(nationwideRendered, 'utf8')
+  await writeFile(path.join(directory, nationwideFilename), nationwideBytes)
+  archive[nationwideFilename] = new Uint8Array(nationwideBytes)
   archive['README.txt'] = strToU8(readmes[formatName] + commonReadme)
   await writeFile(
     path.join(output, `jichitai-${formatName}.zip`),
