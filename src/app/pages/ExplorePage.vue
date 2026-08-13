@@ -142,7 +142,7 @@ function formatPostalPrefixes(prefixes: string[]) {
           地図または一覧から選択すると、自治体コード・市外局番・郵便番号を確認できます。
         </p>
         <div v-if="!selectedPrefecture" class="dictionary-downloads">
-          <label for="dictionary-format">IMEの形式</label>
+          <label for="dictionary-format">IMEに登録</label>
           <select id="dictionary-format" v-model="selectedDictionaryFormat">
             <option
               v-for="format in imeDictionaryFormats"

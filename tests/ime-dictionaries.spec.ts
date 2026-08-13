@@ -33,6 +33,21 @@ describe('IME dictionary downloads', () => {
     )
   })
 
+  it('has a generated file for every public download URL', async () => {
+    const urls = [
+      nationwideDictionaryUrl('macos'),
+      nationwideDictionaryUrl('windows'),
+      nationwideDictionaryUrl('google'),
+      prefectureDictionaryUrl('macos', '01'),
+      prefectureDictionaryUrl('windows', '47'),
+      prefectureDictionaryUrl('google', '10'),
+    ]
+    for (const url of urls) {
+      const file = path.join('public', url.replace(/^\//, ''))
+      expect((await readFile(file)).byteLength, url).toBeGreaterThan(0)
+    }
+  })
+
   it('generates 47 dictionaries for every format', async () => {
     for (const format of ['macos', 'windows', 'google']) {
       expect(await readdir(path.join(dictionaryRoot, format))).toHaveLength(48)

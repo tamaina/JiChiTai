@@ -8,6 +8,7 @@
     "node": ">=22.0.0"
   },
   "scripts": {
+    "predev": "pnpm ime-dictionaries:build",
     "dev": "vite dev",
     "build": "pnpm ime-dictionaries:build && vite build",
     "preview": "pnpm build && vite preview",
