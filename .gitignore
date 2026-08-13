@@ -7,11 +7,6 @@ playwright-report/
 test-results/
 coverage/
 generated/
-!public/generated/
-public/generated/*
-!public/generated/emblems/
-!public/generated/emblems/**
-!public/generated/maps/
-!public/generated/maps/**
+public/generated/
 worker-configuration.d.ts
 *.log
