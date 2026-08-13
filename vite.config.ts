@@ -13,7 +13,7 @@ const vueClientPlugin = perEnvironmentPlugin('vue-client', (environment) =>
 )
 
 const pwaClientPlugins = VitePWA({
-  registerType: 'prompt',
+  registerType: 'autoUpdate',
   manifest: {
     id: '/',
     name: 'JiChiTai - 市区町村タイピング',
