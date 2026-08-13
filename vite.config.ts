@@ -51,20 +51,6 @@ const pwaClientPlugins = VitePWA({
     navigateFallback: '/index.html',
     globPatterns: ['**/*.{js,css,html,svg,png}'],
     globIgnores: ['**/generated/**/*', 'icon.svg', 'icon-*.png'],
-    runtimeCaching: [
-      {
-        urlPattern: ({ url }) => url.pathname.startsWith('/generated/'),
-        handler: 'StaleWhileRevalidate',
-        options: {
-          cacheName: 'jichitai-generated-data',
-          expiration: {
-            maxEntries: 3000,
-            maxAgeSeconds: 60 * 60 * 24 * 30,
-          },
-          cacheableResponse: { statuses: [0, 200] },
-        },
-      },
-    ],
   },
 }).map((plugin) => ({
   ...plugin,
