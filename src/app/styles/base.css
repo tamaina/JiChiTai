@@ -980,7 +980,7 @@ td small {
   display: grid;
   max-width: 560px;
   grid-template-columns: repeat(3, 1fr);
-  margin: var(--space-6) 0;
+  margin: var(--space-6) auto;
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   background: var(--color-surface);
